@@ -31,7 +31,7 @@ El proyecto se basa en una arquitectura de **Frontend y Backend desacoplados**:
 
 * **Framework:** Laravel 11 (PHP 8.2+)
 * **Base de Datos:** **MySQL 8.0** con implementación de columnas tipo **JSON** para una gestión flexible de las preguntas.
-* **IA:** Google Gemini API (Modelo 1.5 Flash).
+* **IA:** Google Gemini API (Modelo 3.1 Flash Lite).
 * **Gestión de Colas:** Laravel Queue Workers para el procesamiento de PDFs en segundo plano.
 * **Seguridad:** Autenticación basada en tokens con Laravel Sanctum.
 
@@ -92,7 +92,7 @@ Para que el motor de IA funcione, es imprescindible configurar la clave de API e
 ```env
 GEMINI_API_KEY=tu_api_key_aqui
 ```
-El sistema utiliza el modelo **Gemini 1.5 Flash** optimizado mediante un *System Prompt* específico para garantizar que la respuesta sea siempre un JSON válido y compatible con nuestra estructura de base de datos.
+El sistema utiliza el modelo **Gemini 3.1 Flash Lite** optimizado mediante un *System Prompt* específico para garantizar que la respuesta sea siempre un JSON válido y compatible con nuestra estructura de base de datos.
 
 ---
 
