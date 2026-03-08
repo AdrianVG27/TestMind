@@ -1,5 +1,14 @@
 # 🧠 TestMind - Backend (Laravel + Gemini AI)
 
+<p align="center">
+  <strong>IDIOMA</strong><br>
+  <strong>ES</strong> &nbsp;|&nbsp; 
+  <a href="README.gl.md"><strong>GL</strong></a> &nbsp;|&nbsp; 
+  <a href="README.en.md"><strong>EN</strong></a>
+</p>
+
+---
+
 **TestMind** es el núcleo de una plataforma inteligente diseñada para la generación automática de evaluaciones académicas. Mediante el uso de la API de **Google Gemini**, el sistema procesa documentos PDF y los transforma en cuestionarios estructurados, optimizando el tiempo de creación de contenido educativo.
 
 Este repositorio contiene la lógica del servidor, la gestión de la base de datos y la integración con la IA.
