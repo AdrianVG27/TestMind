@@ -1,23 +1,35 @@
 <?php
+
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-/*
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DocumentoController;
+use App\Http\Controllers\Api\TestController;
+
+Route::post('/login', [AuthController::class, 'login']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
-    //* LISTAR usuarios
-    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-    //* CREAR un nuevo usuario
-    Route::post('/users', [UserController::class, 'store']);
+    Route::middleware('abilities:user')->group(function () {
+        
+        Route::get('/user-profile', function (Request $request) {
+            return $request->user();
+        });
 
-    //* MOSTRAR un usuario específico
-    Route::get('/users/{id}', [UserController::class, 'show']);
+        Route::apiResource('documentos', DocumentoController::class);
 
-    //* ACTUALIZAR un usuario
-    Route::put('/users/{id}', [UserController::class, 'update']); // reemplaza todos los campos
-    Route::patch('/users/{id}', [UserController::class, 'update']); // para actualizar solo algunos campos
+        Route::apiResource('tests', TestController::class);
+        
+    });
 
-    //* ELIMINAR un usuario
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    Route::middleware('abilities:admin')->group(function () {
+        
+        Route::get('/admin/dashboard', function () {
+            return response()->json(['message' => 'Bienvenido al panel de gestión, Admin.']);
+        });
+
+    });
+
 });
-*/

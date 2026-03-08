@@ -14,6 +14,12 @@ return [
     |
     */
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL'),
+        'temperature' => env('GEMINI_TEMPERATURE'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
