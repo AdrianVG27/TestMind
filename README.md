@@ -115,7 +115,7 @@ Este proyecto es de código abierto bajo la licencia [MIT](https://opensource.or
 ---
 
 ## 👨‍💻 Autor
-**Adrián** - Estudiante de Desarrollo de Aplicaciones Web.
+**[@AdrianVG27](https://github.com/AdrianVG27)** - Estudiante de Desarrollo de Aplicaciones Web.
 *Este proyecto es el resultado de mi Trabajo de Fin de Ciclo (TFC) - 2026.*
 
 ---
