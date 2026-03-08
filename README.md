@@ -1,59 +1,130 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🧠 TestMind - Backend (Laravel + Gemini AI)
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <strong>IDIOMA</strong><br>
+  <strong>ES</strong> &nbsp;|&nbsp; 
+  <a href="README.gl.md"><strong>GL</strong></a> &nbsp;|&nbsp; 
+  <a href="README.en.md"><strong>EN</strong></a>
 </p>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**TestMind** es el núcleo de una plataforma inteligente diseñada para la generación automática de evaluaciones académicas. Mediante el uso de la API de **Google Gemini**, el sistema procesa documentos PDF y los transforma en cuestionarios estructurados, optimizando el tiempo de creación de contenido educativo.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Este repositorio contiene la lógica del servidor, la gestión de la base de datos y la integración con la IA.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🏗️ Arquitectura del Sistema
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+El proyecto se basa en una arquitectura de **Frontend y Backend desacoplados**:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+* **Backend (Este repositorio):** API REST desarrollada en **Laravel 11**. Se encarga de la autenticación (Sanctum), el almacenamiento de archivos y la orquestación de Jobs asíncronos para la IA.
+* **Frontend:** Aplicación SPA desarrollada en **Angular**, la cual se sirve desde el directorio `public/` en entornos de producción.
+    > 🔗 **Repositorio del Frontend:** [TestMind Angular](https://github.com/AdrianVG27/TestMind_front)
 
-## Laravel Sponsors
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 🛠️ Stack Tecnológico
 
-## Contributing
+* **Framework:** Laravel 11 (PHP 8.2+)
+* **Base de Datos:** **MySQL 8.0** con implementación de columnas tipo **JSON** para una gestión flexible de las preguntas.
+* **IA:** Google Gemini API (Modelo 3.1 Flash Lite).
+* **Gestión de Colas:** Laravel Queue Workers para el procesamiento de PDFs en segundo plano.
+* **Seguridad:** Autenticación basada en tokens con Laravel Sanctum.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 📂 El uso de JSON en MySQL
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Para este TFC, se ha optado por almacenar los tests en formato **JSON** dentro de MySQL. Esta decisión técnica permite:
+1.  **Flexibilidad:** Adaptar el formato de las preguntas (opción múltiple, verdadero/falso) sin alterar el esquema de la base de datos.
+2.  **Eficiencia:** Reducir la complejidad de las consultas (Joins) al recuperar el examen completo en un solo objeto.
+3.  **Integración Directa:** El output de la IA se guarda y se sirve al frontend casi sin transformación, mejorando la velocidad de respuesta.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🚀 Instalación y Configuración
 
-## License
+### 1. Configurar el Backend
+```bash
+# Clonar el repositorio
+git clone [https://github.com/tu-usuario/testmind-laravel.git](https://github.com/tu-usuario/testmind-laravel.git)
+cd testmind-laravel
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Instalar dependencias de PHP
+composer install
+
+# Configurar el entorno (Asegúrate de poner tu GEMINI_API_KEY)
+cp .env.example .env
+php artisan key:generate
+
+# Ejecutar migraciones y seeders
+php artisan migrate --seed
+```
+
+### 2. Despliegue del Frontend (Angular)
+Para producción, el frontend se integra directamente en este repositorio:
+1. Dirígete al repositorio de [TestMind Angular](https://github.com/AdrianVG27/TestMind_front).
+2. Genera el build de producción: `ng build --configuration production`.
+3. Copia el contenido de la carpeta `dist/test-mind/browser/` (o la ruta de salida de tu Angular) dentro de la carpeta `public/` de este proyecto Laravel.
+4. Laravel servirá automáticamente la SPA de Angular.
+
+### 3. Ejecución del Procesamiento de IA
+Dado que la generación de tests mediante Gemini es una tarea pesada, se realiza de forma asíncrona mediante **Laravel Queues**. Para procesar los archivos subidos, debes ejecutar el worker:
+
+```bash
+# En desarrollo
+php artisan queue:work
+
+# En producción (recomendado usar Supervisor)
+php artisan queue:restart
+```
+
+---
+
+## ⚙️ Configuración de la API de Gemini
+
+Para que el motor de IA funcione, es imprescindible configurar la clave de API en tu archivo `.env`:
+
+```env
+GEMINI_API_KEY=tu_api_key_aqui
+```
+El sistema utiliza el modelo **Gemini 3.1 Flash Lite** optimizado mediante un *System Prompt* específico para garantizar que la respuesta sea siempre un JSON válido y compatible con nuestra estructura de base de datos.
+
+---
+
+## 🔄 Flujo de Trabajo (Workflow)
+
+
+
+1. **Subida (Upload):** El cliente envía un PDF a través de la API de Angular.
+2. **Despacho de Tarea (Job Dispatch):** Laravel almacena el archivo y pone en cola un `GenerarTestJob`.
+3. **Procesamiento IA:** El worker extrae el contenido, se comunica con la API de Google Gemini y recibe la estructura del cuestionario.
+4. **Almacenamiento JSON:** El resultado se guarda directamente en la columna de tipo `JSON` de la tabla `tests`.
+5. **Notificación:** El test cambia su estado a `completado` y queda disponible para que el alumno lo realice.
+
+---
+
+## 🚧 En Proceso (Roadmap)
+
+Actualmente, el proyecto se encuentra en fase de mejora continua con las siguientes funcionalidades en desarrollo:
+- [ ] **Módulo de Exportación GIFT**: Implementación de un motor de transformación de JSON a formato GIFT (estándar Moodle) para la importación directa de cuestionarios de PHP.
+- [ ] **Dashboard de Analíticas:** Visualización de progreso y notas mediante gráficas (Chart.js).
+- [ ] **Corrección Automática:** Evaluación en tiempo real de las respuestas enviadas por el alumno.
+- [ ] **Soporte Multilingüe:** Capacidad de procesar apuntes y generar preguntas en Gallego e Inglés.
+
+---
+
+## ⚖️ Licencia
+Este proyecto es de código abierto bajo la licencia [MIT](https://opensource.org/licenses/MIT). Siéntete libre de clonarlo, modificarlo y usarlo para fines educativos.
+
+---
+
+## 👨‍💻 Autor
+**[@AdrianVG27](https://github.com/AdrianVG27)** - Estudiante de Desarrollo de Aplicaciones Web.
+*Este proyecto es el resultado de mi Trabajo de Fin de Ciclo (TFC) - 2026.*
+
+---
