@@ -20,7 +20,7 @@ Este repositorio contén a lóxica do servidor, a xestión da base de datos e a 
 O proxecto baséase nunha arquitectura de **Frontend e Backend desacoplados**:
 
 * **Backend (Este repositorio):** API REST desenvolvida en **Laravel 11**. Encárgase da autenticación (Sanctum), o almacenamento de ficheiros e a orquestración de Jobs asíncronos para a IA.
-* **Frontend:** Aplicación SPA desenvolvida en **Angular**, a cal se serve desde o directorio `public/` en contornas de produción.
+* **Frontend:** Aplicación SPA desenvolvida en **Angular**, a cal se serve dende o directorio `public/` en contornas de produción.
     > 🔗 **Repositorio do Frontend:** [TestMind Angular](https://github.com/AdrianVG27/TestMind_front)
 
 ---
@@ -29,7 +29,7 @@ O proxecto baséase nunha arquitectura de **Frontend e Backend desacoplados**:
 
 * **Framework:** Laravel 11 (PHP 8.2+)
 * **Base de Datos:** **MySQL 8.0** con implementación de columnas tipo **JSON** para unha xestión flexible das preguntas.
-* **IA:** Google Gemini API (Modelo 1.5 Flash).
+* **IA:** Google Gemini API (Modelo 3.1 Flash Lite).
 * **Xestión de Colas:** Laravel Queue Workers para o procesamento de PDFs en segundo plano.
 * **Seguridade:** Autenticación baseada en tokens con Laravel Sanctum.
 
@@ -37,7 +37,7 @@ O proxecto baséase nunha arquitectura de **Frontend e Backend desacoplados**:
 
 ## 📂 O uso de JSON en MySQL
 
-Para este TFC, optouse por almacenar os tests en formato **JSON** dentro de MySQL. Esta decisión técnica permite:
+Para este TFC, optouse por almacear os tests en formato **JSON** dentro de MySQL. Esta decisión técnica permite:
 1. **Flexibilidade:** Adaptar o formato das preguntas (opción múltiple, verdadeiro/falso) sen alterar o esquema da base de datos.
 2. **Eficiencia:** Reducir a complexidade das consultas (Joins) ao recuperar o exame completo nun único obxecto.
 3. **Integración Directa:** O output da IA gárdase e sérvese ao frontend case sen transformación, mellorando a velocidade de resposta.
@@ -90,7 +90,7 @@ Para que o motor de IA funcione, é imprescindible configurar a clave de API no 
 ```env
 GEMINI_API_KEY=tu_api_key_aqui
 ```
-O sistema utiliza o modelo **Gemini 1.5 Flash** optimizado mediante un *System Prompt* específico para garantir que a resposta sexa sempre un JSON válido e compatible coa nosa estrutura de base de datos.
+O sistema utiliza o modelo **Gemini 3.1 Flash Lite** optimizado mediante un *System Prompt* específico para garantir que a resposta sexa sempre un JSON válido e compatible coa nosa estrutura de base de datos.
 
 ---
 
