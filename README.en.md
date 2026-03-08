@@ -29,7 +29,7 @@ The project is based on a **Decoupled Frontend and Backend** architecture:
 
 * **Framework:** Laravel 11 (PHP 8.2+)
 * **Database:** **MySQL 8.0** with **JSON** column implementation for flexible question management.
-* **AI:** Google Gemini API (1.5 Flash Model).
+* **AI:** Google Gemini API (3.1 Flash Lite Model).
 * **Queue Management:** Laravel Queue Workers for background PDF processing.
 * **Security:** Token-based authentication with Laravel Sanctum.
 
@@ -91,7 +91,7 @@ To enable the AI engine, you must configure your API key in the `.env` file:
 GEMINI_API_KEY=your_api_key_here
 ```
 
-The system uses the **Gemini 1.5 Flash** model, optimized via a specific *System Prompt* to ensure the response is always a valid JSON compatible with our database structure.
+The system uses the **Gemini 3.1 Flash Lite** model, optimized via a specific *System Prompt* to ensure the response is always a valid JSON compatible with our database structure.
 
 ---
 
