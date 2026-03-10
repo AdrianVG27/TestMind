@@ -14,36 +14,57 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+            'remember' => ['nullable', 'boolean']
         ]);
 
-        // 1. Detectamos si es un correo de admin por el dominio
+        $remember = $request->boolean('remember');
+
         $esAdmin = str_ends_with($request->email, '@testmind.com');
 
-        // 2. Elegimos el modelo y el "role" según el dominio
         $modelo = $esAdmin ? Admin::class : User::class;
         $role = $esAdmin ? 'admin' : 'user';
 
-        // 3. Buscamos al usuario en la tabla correspondiente
         $usuario = $modelo::where('email', $request->email)->first();
 
-        // 4. Validamos contraseña
-        if (! $usuario || ! Hash::check($request->password, $usuario->password)) {
+        if (!$usuario || !Hash::check($request->password, $usuario->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Las credenciales son incorrectas.'],
+                'email' => ['Credenciales incorrectas']
             ]);
         }
 
-        // 5. Generamos el Token de Sanctum incluyendo el rol en las habilidades (abilities)
-        $token = $usuario->createToken('auth_token', [$role])->plainTextToken;
+        $usuario->tokens()->delete();
 
-        // 6. Respondemos a Angular con el token y el rol para que sepa a dónde redirigir
+        $tokenResult = $usuario->createToken('auth_token', [$role]);
+
+        $plainToken = $tokenResult->plainTextToken;
+        $token = $tokenResult->accessToken;
+
+        if ($role === 'admin') {
+            $token->expires_at = now()->addMinutes(30);
+        } else {
+            $token->remember_me = $remember;
+            $token->expires_at = $remember ? now()->addDays(30) : now()->addHour();
+        }
+
+        $token->save();
+
         return response()->json([
-            'access_token' => $token,
+            'access_token' => $plainToken,
             'token_type' => 'Bearer',
             'role' => $role,
-            'user' => $usuario,
+            'remember' => $remember
         ]);
     }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Sesión cerrada'
+        ]);
+    }
+
 }

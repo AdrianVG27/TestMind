@@ -12,11 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        
-        // Registramos los alias de Sanctum para que funcionen en routes/api.php
         $middleware->alias([
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
+            'refresh.token' => \App\Http\Middleware\RefreshTokenTimeout::class,
         ]);
 
     })

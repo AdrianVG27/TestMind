@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\TestController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
