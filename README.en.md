@@ -109,13 +109,43 @@ The system uses the **Gemini 3.1 Flash Lite** model, optimized via a specific *S
 
 ---
 
-## 🚧 In Progress (Roadmap)
+## 🚧 Project Roadmap
 
-Currently, the project is in a continuous improvement phase with the following features under development:
-- [ ] **GIFT Export Module**: Implementation of a transformation engine from JSON to GIFT format (Moodle standard) for direct import of quizzes.
-- [ ] **Analytics Dashboard**: Progress and grade visualization using graphs (Chart.js).
-- [ ] **Auto-Grading**: Real-time evaluation of student answers.
-- [ ] **Multilingual Support**: Ability to process notes and generate questions in Galician and English.
+The development of **TestMind** is divided into the following strategic areas:
+
+### 🔐 Authentication and Security
+- [x] **Multi-table System**: Independent authentication for users (`user`) and administrators (`admin`) via Laravel Sanctum.
+- [x] **User Registration**: Registration endpoint with data validation and automatic token assignment.
+- [x] **Scope Control (Abilities)**: Differentiation of permissions between students and administrators in API tokens.
+- [x] **Exam Security**: `/test/{id}/realizar` endpoint that filters and hides correct answers to prevent cheating on the frontend.
+
+### 🤖 Artificial Intelligence Core
+- [x] **Integration with Gemini 3.1 Flash Lite**: Specialized service for communication with Google AI.
+- [x] **Prompt Engineering**: Optimized prompts to extract educational content from technical PDFs.
+- [x] **Strict JSON Structure**: Generation of 3 question types: `single_selection`, `multi_answer`, and `completion_writing`.
+- [ ] **Multilingual Support**: Capacity to process notes and generate questions in Galician and English.
+
+### ⚙️ Infrastructure and Processing
+- [x] **Asynchronous Processing**: Implementation of Jobs for generating heavy tests without blocking the API.
+- [x] **Queue System**: Task management via database.
+- [x] **Parallelism with Supervisor**: Configuration of multiple workers to process simultaneous test bursts.
+- [x] **Resilience**: Retry logic (`tries`) and progressive wait (`backoff`) to handle AI quota limits (Rate Limit).
+
+### 📂 Document Management and Maintenance
+- [x] **File Upload**: Endpoint for PDF upload with local storage organized by user ID.
+- [x] **Technical Validation**: Control of MIME types and maximum file size.
+- [ ] **Maintenance**: Command for cleaning up temporary PDF files or orphaned tests.
+
+### 📝 Evaluation and Results
+- [x] **Correction Engine**: `/corregir` endpoint that validates user answers against the database and automatically calculates the grade.
+- [x] **Attempt History**: Attempts table to persist results, hits, and duration of each test taken by the user.
+- [ ] **Output Optimization**: Implementation of *API Resources* to standardize all server responses.
+
+### 📊 Reports and Export (Admin)
+- [ ] **Reporting System (Blade)**: Creation of optimized Blade templates for generating reports in PDF or print format.
+- [ ] **Export Logic**: Library integration (e.g., Snappy or DomPDF) to convert results into downloadable files.
+- [ ] **Analytics Endpoints**: Specific routes to serve statistical data (averages, common failures) for graphical representation.
+- [ ] **GIFT Export Module**: Implementation of a transformation engine from JSON to GIFT format (Moodle standard).
 
 ---
 
