@@ -108,13 +108,43 @@ O sistema utiliza o modelo **Gemini 3.1 Flash Lite** optimizado mediante un *Sys
 
 ---
 
-## 🚧 En Proceso (Roadmap)
+## 🚧 Roadmap do Proxecto
 
-Actualmente, o proxecto atópase en fase de mellora continua coas seguintes funcionalidades en desenvolvemento:
-- [ ] **Módulo de Exportación GIFT**: Implementación dun motor de transformación de JSON a formato GIFT (estándar Moodle) para a importación directa de cuestionarios de PHP.
-- [ ] **Dashboard de Analíticas:** Visualización de progreso e notas mediante gráficas (Chart.js).
-- [ ] **Corrección Automática:** Avaliación en tempo real das respostas enviadas polo alumno.
-- [ ] **Soporte Multilingüe:** Capacidade de procesar apuntamentos e xerar preguntas en Galego e Inglés.
+O desenvolvemento de **TestMind** divídese nas seguintes áreas estratéxicas:
+
+### 🔐 Autenticación e Seguridade
+- [x] **Sistema Multitáboa**: Autenticación independente para usuarios (`user`) e administradores (`admin`) mediante Laravel Sanctum.
+- [x] **Rexistro de Usuarios**: Endpoint de rexistro con validación de datos e asignación automática de tokens.
+- [x] **Control de Ámbito (Abilities)**: Diferenciación de permisos entre estudantes e administradores nos tokens de API.
+- [x] **Seguridade en Exames**: Endpoint `/test/{id}/realizar` que filtra e oculta as respostas correctas para evitar trampas no frontend.
+
+### 🤖 Core de Intelixencia Artificial
+- [x] **Integración con Gemini 3.1 Flash Lite**: Servizo especializado para a comunicación con Google AI.
+- [x] **Enxeñaría de Prompts**: Prompts optimizados para extraer contido educativo de PDFs técnicos.
+- [x] **Estrutura JSON Estrita**: Xeración de 3 tipos de preguntas: `unica_seleccion`, `multi_respuesta` e `completar_escribir`.
+- [ ] **Soporte Multilingüe**: Capacidade de procesar apuntamentos e xerar preguntas en Galego e Inglés.
+
+### ⚙️ Infraestrutura e Procesamento
+- [x] **Procesamento Asíncrono**: Implementación de Jobs para a xeración de tests pesados sen bloquear a API.
+- [x] **Sistema de Colas (Queues)**: Xestión de tarefas mediante base de datos.
+- [x] **Paralelismo con Supervisor**: Configuración de múltiples workers para procesar ráfagas de tests simultáneos.
+- [x] **Resiliencia**: Lóxica de reintentos (`tries`) e espera progresiva (`backoff`) para manexar límites de cota (Rate Limit) da IA.
+
+### 📂 Xestión de Documentos e Mantemento
+- [x] **Subida de Ficheiros**: Endpoint para carga de PDFs con almacenamento local organizado polo ID de usuario.
+- [x] **Validación Técnica**: Control de tipos MIME e tamaño máximo de ficheiros.
+- [ ] **Mantemento**: Comando para limpeza de ficheiros PDF temporais ou tests orfos.
+
+### 📝 Avaliación e Resultados
+- [x] **Motor de Corrección**: Endpoint `/corregir` que valida as respostas do usuario contra a base de datos e calcula a nota automaticamente.
+- [x] **Historial de Intentos**: Táboa de intentos para persistir os resultados, acertos e duración de cada test realizado polo usuario.
+- [ ] **Optimización de Saída**: Implementación de *API Resources* para estandarizar todas as respostas do servidor.
+
+### 📊 Informes e Exportación (Admin)
+- [ ] **Sistema de Informes (Blade)**: Creación de modelos Blade optimizados para a xeración de informes en PDF ou formato impresión.
+- [ ] **Lóxica de Exportación**: Integración de libraría (ex. Snappy ou DomPDF) para converter os resultados en ficheiros descargables.
+- [ ] **Endpoints para Analítica**: Rutas específicas para servir datos estatísticos (medias, fallos comúns) para a súa representación gráfica.
+- [ ] **Módulo de Exportación GIFT**: Implementación dun motor de transformación de JSON a formato GIFT (estándar Moodle).
 
 ---
 
