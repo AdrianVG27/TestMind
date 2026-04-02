@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logos/logo_horizontal_sinFondo.png" alt="TestMind Logo" width="500">
+  <img src="public/assets/logos/logo_horizontal_sinFondo.png" alt="TestMind Logo" width="500">
 </p>
 
 # 🧠 TestMind - Backend (Laravel + Gemini AI)

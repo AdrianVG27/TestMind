@@ -1,23 +1,43 @@
 <?php
+
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DocumentoController;
+use App\Http\Controllers\Api\TestController;
+use App\Http\Controllers\Api\IntentoController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
-/*
-Route::middleware('auth:sanctum')->group(function () {
 
-    //* LISTAR usuarios
-    Route::get('/users', [UserController::class, 'index']);
+Route::post('/login', [AuthController::class, 'login']);
 
-    //* CREAR un nuevo usuario
-    Route::post('/users', [UserController::class, 'store']);
+Route::post('/register', [AuthController::class, 'register']);
 
-    //* MOSTRAR un usuario específico
-    Route::get('/users/{id}', [UserController::class, 'show']);
+Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
 
-    //* ACTUALIZAR un usuario
-    Route::put('/users/{id}', [UserController::class, 'update']); // reemplaza todos los campos
-    Route::patch('/users/{id}', [UserController::class, 'update']); // para actualizar solo algunos campos
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-    //* ELIMINAR un usuario
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    Route::get('/me', function (Request $request) {
+        $user = $request->user();
+
+        return response()->json([
+            'data' => $user,
+            'role' => $user->currentAccessToken()->abilities[0] ?? 'unknown',
+            'type' => (new \ReflectionClass($user))->getShortName(),
+        ]);
+    });
+
+    Route::middleware('abilities:user')->group(function () {
+        Route::apiResource('documento', DocumentoController::class);
+        Route::apiResource('test', TestController::class);
+        Route::get('/test/{test}/realizar', [TestController::class, 'realizar']);
+        Route::post('/test/{test}/corregir', [TestController::class, 'corregir']);
+        Route::get('/intento', [IntentoController::class, 'index']);
+        Route::get('/intento/{intento}', [IntentoController::class, 'show']);
+    });
+
+    Route::prefix('admin')->middleware('abilities:admin')->group(function () {
+        Route::get('/dashboard', function () {
+            return response()->json(['message' => 'Panel de gestión TestMind activo.']);
+        });
+    });
+
 });
-*/
