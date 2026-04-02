@@ -16,9 +16,14 @@ class GenerarTestJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $timeout = 120;
+
     public $tries = 3;
 
-    public $backoff = 30;
+    public function backoff(): array
+    {
+        return [60, 120, 240]; // Primer reintento al minuto, segundo a los 2 min, tercero a los 4 min.
+    }
 
     /**
      * Create a new job instance.
@@ -41,7 +46,7 @@ class GenerarTestJob implements ShouldQueue
             );
 
             $this->test->update([
-                'preguntas' => $resultadoIA,
+                'preguntas' => $resultadoIA['preguntas'] ?? $resultadoIA,
                 'estado' => 'completado',
             ]);
 

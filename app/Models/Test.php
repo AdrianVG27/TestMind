@@ -11,6 +11,7 @@ class Test extends Model
 
     protected $fillable = [
         'documento_id',
+        'titulo',
         'configuracion',
         'preguntas',
         'estado'

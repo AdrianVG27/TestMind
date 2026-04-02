@@ -48,7 +48,11 @@ class GeminiService
             );
 
             $modelo = GeminiClient::generativeModel(model: $this->model)
-                ->withSystemInstruction(Content::parse('Eres un profesor experto. Genera solo JSON siguiendo el esquema proporcionado. No incluyas explicaciones.'))
+                ->withSystemInstruction(Content::parse(
+                    'Eres un profesor experto en informática. '.
+                    "Es OBLIGATORIO que el array 'preguntas' tenga EXACTAMENTE la cantidad de elementos solicitada. ".
+                    'No resumas, no omitas, no incluyas explicaciones y genera solo JSON puro.'
+                ))
                 ->withGenerationConfig($generationConfig);
 
             $promptUsuario = $this->prepararPrompt($config);
@@ -88,7 +92,7 @@ class GeminiService
                 
                 Analiza el PDF adjunto y extrae los conceptos.";
 
-        if (!empty($config['input_user'])) {
+        if (! empty($config['input_user'])) {
             $prompt .= "\n\nDIRECTRICES ESPECÍFICAS DEL USUARIO (Prioridad Alta):
                     {$config['input_user']}";
         } else {
@@ -103,7 +107,6 @@ class GeminiService
         return new Schema(
             type: DataType::OBJECT,
             properties: [
-                'titulo' => new Schema(type: DataType::STRING),
                 'preguntas' => new Schema(
                     type: DataType::ARRAY,
                     items: new Schema(
@@ -121,7 +124,7 @@ class GeminiService
                     )
                 ),
             ],
-            required: ['titulo', 'preguntas']
+            required: ['preguntas']
         );
     }
 }

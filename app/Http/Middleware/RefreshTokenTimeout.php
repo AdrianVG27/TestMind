@@ -13,28 +13,23 @@ class RefreshTokenTimeout
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        if ($user) {
+
+        if ($user && $user->currentAccessToken()) {
             $token = $user->currentAccessToken();
-            if ($token && $token->expires_at && $token->expires_at->isPast()) {
-                $token->delete();
-                return response()->json([
-                    'message' => 'Sesión expirada por inactividad'
-                ], 401);
+            
+            if ($token->can('admin')) {
+                $token->expires_at = now()->addMinutes(30);
+            } else {
+                $isRemember = $token->expires_at && $token->expires_at->diffInHours(now()) > 24;
+                $token->expires_at = $isRemember ? now()->addDays(30) : now()->addHour();
             }
-            if ($token) {
-                $role = $token->abilities[0] ?? 'user';
-                if ($role === 'admin'){
-                    $token->expires_at = now()->addMinutes(30);
-                } else {
-                    $token->expires_at = $token->remember_me ? now()->addDays(30) : now()->addHour();
-                }
-                
-                $token->save();
-            }
+
+            $token->save();
         }
+
         return $next($request);
     }
 }

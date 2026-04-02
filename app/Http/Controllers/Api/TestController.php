@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerarTestJob;
 use App\Models\Documento;
+use App\Models\Intento;
 use App\Models\Test;
 use Illuminate\Http\Request;
 
@@ -12,13 +13,14 @@ class TestController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json($request->user()->tests()->with('documento')->latest()->get());
+        return response()->json($request->user()->test()->with('documento')->latest()->get());
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'documento_id' => 'required|exists:documento,id',
+            'titulo' => 'required|string',
             'nivel' => 'required|string',
             'total' => 'required|integer|min:1',
             'prop_unica' => 'required|integer',
@@ -26,7 +28,7 @@ class TestController extends Controller
             'prop_escribir' => 'required|integer',
             'min_opciones' => 'required|integer',
             'max_opciones' => 'required|integer',
-            'input_user'    => 'nullable|string|max:500',
+            'input_user' => 'nullable|string|max:500',
         ]);
 
         $documento = Documento::where('id', $request->documento_id)
@@ -35,6 +37,7 @@ class TestController extends Controller
 
         $test = Test::create([
             'documento_id' => $documento->id,
+            'titulo' => $request->titulo,
             'configuracion' => $request->only(['nivel', 'total', 'prop_unica', 'prop_multi', 'prop_escribir', 'min_opciones', 'max_opciones', 'input_user']),
             'estado' => 'pendiente',
         ]);
@@ -73,5 +76,75 @@ class TestController extends Controller
         $test->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function realizar(Test $test)
+    {
+        $preguntasOcultas = collect($test->preguntas)->map(function ($pregunta) {
+            unset($pregunta['respuesta_correcta']);
+
+            return $pregunta;
+        });
+
+        return response()->json([
+            'id' => $test->id,
+            'titulo' => $test->titulo,
+            'configuracion' => $test->configuracion,
+            'preguntas' => $preguntasOcultas,
+            'estado' => $test->estado,
+        ]);
+    }
+
+    public function corregir(Request $request, Test $test)
+    {
+        $request->validate([
+            'respuestas' => 'required|array',
+            'duracion' => 'nullable|integer',
+        ]);
+
+        $respuestasUsuario = $request->input('respuestas');
+        $preguntasOriginales = $test->preguntas;
+
+        $aciertos = 0;
+        $totalPreguntas = count($preguntasOriginales);
+        $detalles = [];
+
+        foreach ($preguntasOriginales as $index => $pregunta) {
+            $correcta = $pregunta['respuesta_correcta'];
+            $enviada = $respuestasUsuario[$index] ?? null;
+
+            $esCorrecta = ($enviada === $correcta);
+
+            if ($esCorrecta) {
+                $aciertos++;
+            }
+
+            $detalles[] = [
+                'enunciado' => $pregunta['enunciado'],
+                'tu_respuesta' => $enviada,
+                'correcta' => $correcta,
+                'acierto' => $esCorrecta,
+            ];
+        }
+
+        $nota = ($aciertos / $totalPreguntas) * 10;
+
+        $intento = Intento::create([
+            'user_id' => auth()->id(),
+            'test_id' => $test->id,
+            'respuestas_usuario' => $respuestasUsuario,
+            'aciertos' => $aciertos,
+            'total_preguntas' => $totalPreguntas,
+            'nota' => round($nota, 2),
+            'duracion_segundos' => $request->input('duracion'),
+        ]);
+
+        return response()->json([
+            'intento_id' => $intento->id,
+            'nota' => $intento->nota,
+            'aciertos' => $intento->aciertos,
+            'total' => $intento->total_preguntas,
+            'feedback' => $detalles,
+        ], 201);
     }
 }

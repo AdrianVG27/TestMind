@@ -15,7 +15,7 @@ class DocumentoController extends Controller
      */
     public function index(Request $request)
     {
-        return response()->json($request->user()->documentos()->latest()->get());
+        return response()->json($request->user()->documento()->latest()->get());
     }
 
     /**
