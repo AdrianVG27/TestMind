@@ -12,13 +12,34 @@ class Documento extends Model
 
     protected $fillable = [
         'nombre',
+        'isPublic',
+        'user_id',
+        'categoria_id',
         'path',
-        'user_id'
     ];
+
+    protected $hidden = [
+        'path',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'id' => 'integer',
+            'user_id' => 'integer',
+            'categoria_id' => 'integer',
+            'isPublic' => 'boolean',
+        ];
+    }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function categoria(): BelongsTo
+    {
+        return $this->belongsTo(Categoria::class, 'categoria_id');
     }
 
     public function test(): HasMany

@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+.dockerignore
+entrypoint.sh
+Dockerfile
+docker

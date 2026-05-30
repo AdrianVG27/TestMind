@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('user')->onDelete('cascade');
             $table->foreignId('test_id')->constrained('test')->onDelete('cascade');
             $table->json('respuestas_usuario');
+            $table->json('feedback')->nullable();
             $table->integer('aciertos');
             $table->integer('total_preguntas');
             $table->decimal('nota', 4, 2);

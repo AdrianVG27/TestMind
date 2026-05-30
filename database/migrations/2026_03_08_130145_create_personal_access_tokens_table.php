@@ -16,6 +16,7 @@ return new class extends Migration
             $table->morphs('tokenable');
             $table->text('name');
             $table->string('token', 64)->unique();
+            $table->string('language', 5)->nullable();
             $table->text('abilities')->nullable();
             $table->boolean('remember_me')->default(false);
             $table->timestamp('last_used_at')->nullable();

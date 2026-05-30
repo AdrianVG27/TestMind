@@ -2,6 +2,7 @@
 
 return [
 
+    'corporate_domain' => env('CORPORATE_DOMAIN', 'example.com'),
     /*
     |--------------------------------------------------------------------------
     | Application Name

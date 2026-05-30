@@ -3,17 +3,72 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TestEditResource;
+use App\Http\Resources\TestResource;
 use App\Jobs\GenerarTestJob;
 use App\Models\Documento;
 use App\Models\Intento;
 use App\Models\Test;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class TestController extends Controller
 {
+    public function indexPublic(Request $request)
+    {
+        try {
+            $tests = Test::query()
+                ->where('estado', 'completado')
+                ->with(['documento.categoria.lenguajes'])
+                ->when($request->titulo, function ($query, $titulo) {
+                    $query->where('titulo', 'like', '%'.$titulo.'%');
+                })
+                ->when($request->categoria_id, function ($query, $categoriaId) {
+                    $query->whereHas('documento', function ($q) use ($categoriaId) {
+                        $q->where('categoria_id', $categoriaId);
+                    });
+                })
+                ->latest()
+                ->paginate(20);
+
+            return TestResource::collection($tests);
+
+        } catch (\Exception $e) {
+            Log::error('Error en TestMind - indexPublic: '.$e->getMessage());
+
+            return response()->json([
+                'error' => 'Error al recuperar los tests públicos',
+                'codigo' => 'ERR_TEST_02',
+            ], 500);
+        }
+    }
+
     public function index(Request $request)
     {
-        return response()->json($request->user()->test()->with('documento')->latest()->get());
+        try {
+            $tests = $request->user()->test()
+                ->with('documento')
+                ->when($request->titulo, function ($query, $titulo) {
+                    $query->where('titulo', 'like', '%'.$titulo.'%');
+                })
+                ->when($request->categoria_id, function ($query, $categoriaId) {
+                    $query->whereHas('documento', function ($q) use ($categoriaId) {
+                        $q->where('categoria_id', $categoriaId);
+                    });
+                })
+                ->latest()
+                ->paginate(20);
+
+            return TestEditResource::collection($tests);
+
+        } catch (\Exception $e) {
+            Log::error('Error en TestMind - index (privado): '.$e->getMessage());
+
+            return response()->json([
+                'error' => 'Error al recuperar tus cuestionarios privados',
+                'codigo' => 'ERR_TEST_01',
+            ], 500);
+        }
     }
 
     public function store(Request $request)
@@ -50,10 +105,22 @@ class TestController extends Controller
     public function show(Test $test)
     {
         if ($test->documento->user_id !== auth()->id()) {
-            abort(403);
+            abort(403, 'No tienes permisos para ver la configuración de este cuestionario.');
         }
 
-        return response()->json($test->load('documento'));
+        try {
+            $test->load('documento.categoria');
+
+            return new TestEditResource($test);
+
+        } catch (\Exception $e) {
+            Log::error('Error en TestMind al cargar el detalle del Test #'.$test->id.': '.$e->getMessage());
+
+            return response()->json([
+                'error' => 'No se pudo recuperar la configuración del cuestionario académico.',
+                'codigo' => 'ERR_TEST_SHOW_01',
+            ], 500);
+        }
     }
 
     public function update(Request $request, Test $test)
@@ -113,7 +180,20 @@ class TestController extends Controller
             $correcta = $pregunta['respuesta_correcta'];
             $enviada = $respuestasUsuario[$index] ?? null;
 
-            $esCorrecta = ($enviada === $correcta);
+            if (is_array($enviada) || is_array($correcta)) {
+                $copiaEnviada = (array) $enviada;
+                $copiaCorrecta = (array) $correcta;
+
+                sort($copiaEnviada);
+                sort($copiaCorrecta);
+
+                $esCorrecta = ($copiaEnviada === $copiaCorrecta);
+            } else {
+                $cleanEnviada = trim(strtolower((string) ($enviada ?? '')));
+                $cleanCorrecta = trim(strtolower((string) ($correcta ?? '')));
+
+                $esCorrecta = ($cleanEnviada === $cleanCorrecta);
+            }
 
             if ($esCorrecta) {
                 $aciertos++;
@@ -133,6 +213,7 @@ class TestController extends Controller
             'user_id' => auth()->id(),
             'test_id' => $test->id,
             'respuestas_usuario' => $respuestasUsuario,
+            'feedback' => $detalles,
             'aciertos' => $aciertos,
             'total_preguntas' => $totalPreguntas,
             'nota' => round($nota, 2),
@@ -144,7 +225,7 @@ class TestController extends Controller
             'nota' => $intento->nota,
             'aciertos' => $intento->aciertos,
             'total' => $intento->total_preguntas,
-            'feedback' => $detalles,
+            'feedback' => $intento->feedback,
         ], 201);
     }
 }

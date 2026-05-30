@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('documento', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('user')->onDelete('cascade');
+            $table->foreignId('categoria_id')->constrained('AUX_Categoria')->onDelete('restrict');
             $table->string('nombre');
             $table->string('path');
+            $table->boolean('isPublic')->default(false);
             $table->timestamps();
         });
     }

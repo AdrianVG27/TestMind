@@ -1,0 +1,25 @@
+{
+    "nav": {
+        "home": "INICIO",
+        "documents": "DOCUMENTOS",
+        "tests": "TESTS",
+        "logout": "Pechar sesión",
+        "login": "INICIAR SESIÓN",
+        "profile": "PERFIL"
+    },
+    "auth": {
+        "login_title": "INICIAR SESIÓN",
+        "register_title": "NOVO USUARIO",
+        "name": "NOME",
+        "email": "CORREO",
+        "remember_me": "RECORDAR SESIÓN",
+        "password": "CONTRASINAL",
+        "confirm_password": "CONFIRMAR CONTRASINAL",
+        "login_btn": "INICIAR SESIÓN",
+        "register_btn": "CREAR CONTA",
+        "no_account": "Non tes conta?",
+        "have_account": "Xa tes conta?",
+        "register_link": "REXÍSTRATE",
+        "login_link": "INICIAR SESIÓN"
+    }
+}

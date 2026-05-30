@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -33,12 +35,12 @@ class User extends Authenticatable
         return $this->hasMany(SocialAccount::class);
     }
 
-    public function documento(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function documento(): HasMany
     {
         return $this->hasMany(Documento::class);
     }
 
-    public function test(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    public function test(): HasManyThrough
     {
         return $this->hasManyThrough(Test::class, Documento::class);
     }

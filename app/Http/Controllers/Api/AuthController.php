@@ -7,8 +7,8 @@ use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -20,7 +20,9 @@ class AuthController extends Controller
             'remember' => ['nullable', 'boolean'],
         ]);
 
-        $esAdmin = str_ends_with($request->email, '@testmind.com');
+        $domain = config('app.corporate_domain');
+
+        $esAdmin = str_ends_with($request->email, '@'.$domain);
         $modelo = $esAdmin ? Admin::class : User::class;
         $role = $esAdmin ? 'admin' : 'user';
 
@@ -33,21 +35,26 @@ class AuthController extends Controller
         $usuario->tokens()->delete();
 
         $tokenResult = $usuario->createToken('auth_token', [$role]);
-        $token = $tokenResult->accessToken;
+
+        $tokenModel = $tokenResult->accessToken;
+
+        $tokenModel->language = $request->header('language', 'es');
+        $tokenModel->remember_me = $request->boolean('remember', false);
 
         if ($esAdmin) {
-            $token->expires_at = now()->addMinutes(30);
+            $tokenModel->expires_at = now()->addMinutes(30);
         } else {
-            $remember = $request->boolean('remember');
-            $token->expires_at = $remember ? now()->addDays(30) : now()->addHour();
+            $tokenModel->expires_at = $tokenModel->remember_me ? now()->addDays(30) : now()->addHour();
         }
 
-        $token->save();
+        $tokenModel->timestamps = false;
+        $tokenModel->save();
 
         return response()->json([
+            'id' => $usuario->id,
             'access_token' => $tokenResult->plainTextToken,
             'role' => $role,
-            'expires_at' => $token->expires_at,
+            'expires_at' => $tokenModel->expires_at,
         ]);
     }
 
@@ -60,11 +67,28 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Registro PÚBLICO para Usuarios (Clientes).
+     * Bloquea el dominio corporativo por seguridad.
+     */
     public function register(Request $request)
     {
+        $domain = config('app.corporate_domain');
+
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:user,email',
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:user,email',
+                function ($attribute, $value, $fail) use ($domain) {
+                    if (str_ends_with(strtolower($value), '@'.$domain)) {
+                        $fail("El dominio @{$domain} está reservado para administración.");
+                    }
+                },
+            ],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
@@ -74,13 +98,38 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $token = $user->createToken('auth_token', ['user'])->plainTextToken;
+        $tokenResult = $user->createToken('auth_token', ['user']);
 
         return response()->json([
-            'message' => 'Usuario registrado con éxito',
+            'message' => 'Usuario registrado con éxito en TestMind',
             'user' => $user,
-            'access_token' => $token,
+            'access_token' => $tokenResult->plainTextToken,
             'token_type' => 'Bearer',
+        ], 201);
+    }
+
+    /**
+     * Registro PRIVADO para Administradores.
+     */
+    public function registerAdmin(Request $request)
+    {
+        $domain = config('app.corporate_domain');
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:admin,email', 'ends_with:@'.$domain],
+            'password' => ['required', Password::defaults()],
+        ]);
+
+        $admin = Admin::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json([
+            'message' => 'Nuevo administrador dado de alta en el sistema',
+            'admin' => $admin,
         ], 201);
     }
 }

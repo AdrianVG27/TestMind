@@ -1,0 +1,1 @@
+import{V as a,ab as o,bb as n,lb as s,tb as r}from"./chunk-JXS3YM5H.js";import"./chunk-2VMXMS7J.js";var d=class t{static \u0275fac=function(e){return new(e||t)};static \u0275cmp=a({type:t,selectors:[["app-dashboard"]],standalone:!0,features:[r],decls:2,vars:0,template:function(e,p){e&1&&(o(0,"p"),s(1,"dashboard works!"),n())}})};export{d as DashboardComponent};
