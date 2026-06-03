@@ -15,7 +15,7 @@ class IntentoController extends Controller
         $intentos = Intento::where('user_id', $userId)
             ->with([
                 'test:id,titulo,documento_id', 
-                'test.documento:id,categoria_id', 
+                'test.documento:id,categoria_codigo',
                 'test.documento.categoria:id,codigo',
                 'test.documento.categoria.lenguajeActual'
             ])

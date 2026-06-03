@@ -5,7 +5,9 @@
         "tests": "TESTS",
         "logout": "Cerrar sesión",
         "login": "INICIAR SESIÓN",
-        "profile": "PERFIL"
+        "profile": "PERFIL",
+        "adminDashboard": "GENERAL",
+        "adminGestionTA": "GESTION TA"
     },
     "auth": {
         "login_title": "INICIAR SESIÓN",

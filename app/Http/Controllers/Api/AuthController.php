@@ -32,8 +32,6 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => ['Credenciales incorrectas']]);
         }
 
-        $usuario->tokens()->delete();
-
         $tokenResult = $usuario->createToken('auth_token', [$role]);
 
         $tokenModel = $tokenResult->accessToken;

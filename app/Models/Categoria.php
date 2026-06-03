@@ -15,6 +15,15 @@ class Categoria extends Model
         'valorUsado',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'id' => 'integer',
+            'codigo' => 'string',
+            'valorUsado' => 'integer',
+        ];
+    }
+
     public function lenguajes(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -29,7 +38,7 @@ class Categoria extends Model
 
     public function lenguajeActual(): BelongsToMany
     {
-        $sessionLocale = request()->user()?->currentAccessToken()?->languaje;
+        $sessionLocale = request()->user()?->currentAccessToken()?->language;
 
         if (!$sessionLocale) {
             $sessionLocale = request()->header('language', config('app.locale'));
@@ -45,9 +54,9 @@ class Categoria extends Model
             ->where('AUX_Lenguaje.codigo', '=', $sessionLocale);
     }
 
-    public function documentos(): HasMany
+    public function documento(): HasMany
     {
-        return $this->hasMany(Documento::class, 'categoria_id');
+        return $this->hasMany(Documento::class, 'categoria_codigo', 'codigo');
     }
 
     public function getDescripcionAttribute(): ?string

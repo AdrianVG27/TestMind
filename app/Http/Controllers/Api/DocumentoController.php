@@ -20,8 +20,8 @@ class DocumentoController extends Controller
             $query->where('nombre', 'like', '%'.$request->nombre.'%');
         }
 
-        if ($request->has('categoria_id')) {
-            $query->where('categoria_id', $request->categoria_id);
+        if ($request->has('categoria_codigo')) {
+            $query->where('categoria_codigo', $request->categoria_codigo);
         }
 
         $documentos = $query->latest()->paginate(20);
@@ -46,7 +46,7 @@ class DocumentoController extends Controller
     {
         $request->validate([
             'pdf' => 'required|file|mimes:pdf|max:12288', // 12MB Máx
-            'categoria_id' => 'required|exists:AUX_Categoria,id',
+            'categoria_codigo' => 'required|exists:AUX_Categoria,codigo',
             'isPublic' => 'boolean',
         ]);
 
@@ -66,7 +66,7 @@ class DocumentoController extends Controller
 
             $documento = Documento::create([
                 'user_id' => $user->id,
-                'categoria_id' => $request->categoria_id,
+                'categoria_codigo' => $request->categoria_codigo,
                 'nombre' => $nombreLimpioSinExtension,
                 'path' => $pathFinal,
                 'isPublic' => $request->boolean('isPublic'),

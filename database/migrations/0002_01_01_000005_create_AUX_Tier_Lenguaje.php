@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('AUX_Categoria_Lenguaje', function (Blueprint $table) {
-            $table->foreignId('categoria_id')->constrained('AUX_Categoria')->onDelete('cascade');
+        Schema::create('AUX_Tier_Lenguaje', function (Blueprint $table) {
+            $table->foreignId('tier_id')->constrained('AUX_Tier')->onDelete('cascade');
             $table->foreignId('lenguaje_id')->constrained('AUX_Lenguaje')->onDelete('cascade');
-            $table->primary(['categoria_id', 'lenguaje_id']);
+            $table->primary(['tier_id', 'lenguaje_id']);
             $table->string('descripcion');
             $table->timestamps();
-            
+
             $table->index('descripcion');
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('AUX_Categoria_Lenguaje');
+        Schema::dropIfExists('AUX_Tier_Lenguaje');
     }
 };

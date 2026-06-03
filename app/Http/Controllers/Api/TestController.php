@@ -23,9 +23,9 @@ class TestController extends Controller
                 ->when($request->titulo, function ($query, $titulo) {
                     $query->where('titulo', 'like', '%'.$titulo.'%');
                 })
-                ->when($request->categoria_id, function ($query, $categoriaId) {
-                    $query->whereHas('documento', function ($q) use ($categoriaId) {
-                        $q->where('categoria_id', $categoriaId);
+                ->when($request->categoria_codigo, function ($query, $categoriaCodigo) {
+                    $query->whereHas('documento', function ($q) use ($categoriaCodigo) {
+                        $q->where('categoria_codigo', $categoriaCodigo);
                     });
                 })
                 ->latest()
@@ -51,9 +51,9 @@ class TestController extends Controller
                 ->when($request->titulo, function ($query, $titulo) {
                     $query->where('titulo', 'like', '%'.$titulo.'%');
                 })
-                ->when($request->categoria_id, function ($query, $categoriaId) {
-                    $query->whereHas('documento', function ($q) use ($categoriaId) {
-                        $q->where('categoria_id', $categoriaId);
+                ->when($request->categoria_codigo, function ($query, $categoriaCodigo) {
+                    $query->whereHas('documento', function ($q) use ($categoriaCodigo) {
+                        $q->where('categoria_codigo', $categoriaCodigo);
                     });
                 })
                 ->latest()

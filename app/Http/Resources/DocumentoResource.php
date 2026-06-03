@@ -17,7 +17,7 @@ class DocumentoResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
-            'categoria_id' => $this->categoria_id,
+            'categoria_codigo' => $this->categoria_codigo,
             'nombre' => $this->nombre,
             'isPublic' => (bool)$this->isPublic,
             'created_at' => $this->created_at,

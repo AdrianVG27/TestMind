@@ -14,7 +14,7 @@ class Documento extends Model
         'nombre',
         'isPublic',
         'user_id',
-        'categoria_id',
+        'categoria_codigo',
         'path',
     ];
 
@@ -27,8 +27,8 @@ class Documento extends Model
         return [
             'id' => 'integer',
             'user_id' => 'integer',
-            'categoria_id' => 'integer',
             'isPublic' => 'boolean',
+            'categoria_codigo' => 'string',
         ];
     }
 
@@ -39,7 +39,7 @@ class Documento extends Model
 
     public function categoria(): BelongsTo
     {
-        return $this->belongsTo(Categoria::class, 'categoria_id');
+        return $this->belongsTo(Categoria::class, 'categoria_codigo', 'codigo');
     }
 
     public function test(): HasMany

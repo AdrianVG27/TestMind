@@ -5,7 +5,9 @@
         "tests": "TESTS",
         "logout": "Pechar sesión",
         "login": "INICIAR SESIÓN",
-        "profile": "PERFIL"
+        "profile": "PERFIL",
+        "adminDashboard": "XERAL",
+        "adminGestionTA": "XESTION TA"
     },
     "auth": {
         "login_title": "INICIAR SESIÓN",

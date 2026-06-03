@@ -5,7 +5,9 @@
         "tests": "TESTS",
         "logout": "Logout",
         "login": "LOGIN",
-        "profile": "PROFILE"
+        "profile": "PROFILE",
+        "adminDashboard": "DASHBOARD",
+        "adminGestionTA": "AT MANAGEMENT"
     },
     "auth": {
         "login_title": "LOGIN",

@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('user', function (Blueprint $table) {
             $table->id();
+            $table->string('tier_codigo')->default('FREE');
+            $table->foreign('tier_codigo')
+                  ->references('codigo')
+                  ->on('AUX_Tier')
+                  ->onDelete('restrict');
             $table->string('name');
             $table->string('nickname')->nullable();
             $table->string('email')->unique();

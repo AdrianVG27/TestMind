@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\IntentoController;
+use App\Http\Controllers\Api\TablaApoyoController;
 use App\Http\Controllers\Api\TestController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -43,10 +45,18 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
     });
 
     Route::prefix('admin')->middleware('abilities:admin')->group(function () {
-        Route::get('/dashboard', function () {
-            return response()->json(['message' => 'Panel de gestión TestMind activo.']);
-        });
+        Route::get('/metrics/users', [AdminDashboardController::class, 'userSegmentation']);
         Route::post('/register', [AuthController::class, 'registerAdmin']);
+
+        Route::prefix('tablaApoyo')->group(function (){
+            Route::get('/', [TablaApoyoController::class, 'indexTablas']);
+            Route::get('/{id}', [TablaApoyoController::class, 'readRows']);
+            Route::post('/{id}/row', [TablaApoyoController::class, 'createRow']);
+            Route::put('/{id}/row/{rowId}', [TablaApoyoController::class, 'updateRow']);
+            Route::delete('/{id}/row/{rowId}', [TablaApoyoController::class, 'deleteRow']);
+            Route::get('/{id}/row/{rowId}/lenguajes', [TablaApoyoController::class, 'getRowLanguages']);
+            Route::put('/{id}/row/{rowId}/lenguajes', [TablaApoyoController::class, 'updateRowLanguages']);
+        });
     });
 
 });

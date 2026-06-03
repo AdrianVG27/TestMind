@@ -18,7 +18,7 @@ class TestResource extends JsonResource
             'id' => $this->id,
             'titulo' => $this->titulo,
             'estado' => $this->estado,
-            'categoria_id' => $this->documento->categoria_id,
+            'categoria_codigo' => $this->documento->categoria_codigo,
         ];
     }
 }

@@ -9,7 +9,9 @@ class Lenguaje extends Model
 {
     protected $table = 'AUX_Lenguaje';
 
-    protected $fillable = ['codigo'];
+    protected $fillable = [
+        'codigo',
+    ];
 
     public function categorias(): BelongsToMany
     {
@@ -18,6 +20,16 @@ class Lenguaje extends Model
             'AUX_Categoria_Lenguaje',
             'lenguaje_id',
             'categoria_id'
+        )->withPivot('descripcion')->withTimestamps();
+    }
+
+    public function tiers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Tier::class,
+            'AUX_Tier_Lenguaje',
+            'lenguaje_id',
+            'tier_id'
         )->withPivot('descripcion')->withTimestamps();
     }
 }
