@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lenguaje extends Model
 {
@@ -11,6 +12,7 @@ class Lenguaje extends Model
 
     protected $fillable = [
         'codigo',
+        'descripcion'
     ];
 
     public function categorias(): BelongsToMany
@@ -31,5 +33,10 @@ class Lenguaje extends Model
             'lenguaje_id',
             'tier_id'
         )->withPivot('descripcion')->withTimestamps();
+    }
+
+    public function traduccionesInterfaz(): HasMany
+    {
+        return $this->hasMany(InterfazTraduccion::class, 'lenguaje_id');
     }
 }

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Admin;
 use App\Models\Categoria;
+use App\Models\InterfazTraduccion;
 use App\Models\Lenguaje;
 use App\Models\TablaApoyo;
 use App\Models\Tier;
@@ -24,9 +25,20 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('abc123..'),
         ]);
 
-        $es = Lenguaje::firstOrCreate(['codigo' => 'es']);
-        $en = Lenguaje::firstOrCreate(['codigo' => 'en']);
-        $gl = Lenguaje::firstOrCreate(['codigo' => 'gl']);
+        $es = Lenguaje::firstOrCreate(
+            ['codigo' => 'es'],
+            ['descripcion' => 'Castellano']
+        );
+
+        $en = Lenguaje::firstOrCreate(
+            ['codigo' => 'en'],
+            ['descripcion' => 'English']
+        );
+
+        $gl = Lenguaje::firstOrCreate(
+            ['codigo' => 'gl'],
+            ['descripcion' => 'Galego']
+        );
 
         $tierFree = Tier::firstOrCreate(
             ['codigo' => 'FREE'],
@@ -85,6 +97,112 @@ class DatabaseSeeder extends Seeder
             'avatar' => null,
         ]);
 
+        $jsonEs = [
+            'nav' => [
+                'home' => 'INICIO',
+                'documents' => 'DOCUMENTOS',
+                'tests' => 'TESTS',
+                'logout' => 'Cerrar sesión',
+                'login' => 'INICIAR SESIÓN',
+                'profile' => 'PERFIL',
+                'adminDashboard' => 'GENERAL',
+                'adminGestionTA' => 'GESTION TA',
+            ],
+            'auth' => [
+                'login_title' => 'INICIAR SESIÓN',
+                'register_title' => 'NUEVO USUARIO',
+                'name' => 'NOMBRE',
+                'email' => 'CORREO',
+                'remember_me' => 'RECORDAR SESIÓN',
+                'password' => 'CONTRASEÑA',
+                'confirm_password' => 'CONFIRMAR CONTRASEÑA',
+                'login_btn' => 'INICIAR SESIÓN',
+                'register_btn' => 'CREAR CUENTA',
+                'no_account' => '¿No tienes cuenta?',
+                'have_account' => '¿Ya tienes cuenta?',
+                'register_link' => 'REGÍSTRATE',
+                'login_link' => 'INICIAR SESIÓN',
+            ],
+        ];
+
+        $jsonGl = [
+            'nav' => [
+                'home' => 'INICIO',
+                'documents' => 'DOCUMENTOS',
+                'tests' => 'TESTS',
+                'logout' => 'Pechar sesión',
+                'login' => 'INICIAR SESIÓN',
+                'profile' => 'PERFIL',
+                'adminDashboard' => 'XERAL',
+                'adminGestionTA' => 'XESTION TA',
+            ],
+            'auth' => [
+                'login_title' => 'INICIAR SESIÓN',
+                'register_title' => 'NOVO USUARIO',
+                'name' => 'NOME',
+                'email' => 'CORREO',
+                'remember_me' => 'RECORDAR SESIÓN',
+                'password' => 'CONTRASINAL',
+                'confirm_password' => 'CONFIRMAR CONTRASINAL',
+                'login_btn' => 'INICIAR SESIÓN',
+                'register_btn' => 'CREAR CONTA',
+                'no_account' => 'Non tes conta?',
+                'have_account' => 'Xa tes conta?',
+                'register_link' => 'REXÍSTRATE',
+                'login_link' => 'INICIAR SESIÓN',
+            ],
+        ];
+
+        $jsonEn = [
+            'nav' => [
+                'home' => 'HOME',
+                'documents' => 'DOCUMENTS',
+                'tests' => 'TESTS',
+                'logout' => 'Logout',
+                'login' => 'LOGIN',
+                'profile' => 'PROFILE',
+                'adminDashboard' => 'DASHBOARD',
+                'adminGestionTA' => 'AT MANAGEMENT',
+            ],
+            'auth' => [
+                'login_title' => 'LOGIN',
+                'register_title' => 'NEW USER',
+                'name' => 'NAME',
+                'email' => 'EMAIL',
+                'remember_me' => 'REMEMBER SESSION',
+                'password' => 'PASSWORD',
+                'confirm_password' => 'CONFIRM PASSWORD',
+                'login_btn' => 'LOGIN',
+                'register_btn' => 'CREATE ACCOUNT',
+                'no_account' => "Don't have an account?",
+                'have_account' => 'Already have an account?',
+                'register_link' => 'REGISTER',
+                'login_link' => 'LOGIN',
+            ],
+        ];
+
+        $this->seedDiccionario($es->id, $jsonEs);
+        $this->seedDiccionario($gl->id, $jsonGl);
+        $this->seedDiccionario($en->id, $jsonEn);
+
         $this->command->info('Base de datos de TestMind poblada con éxito.');
+    }
+
+    private function seedDiccionario(int $lenguajeId, array $datos, string $prefijo = '')
+    {
+        foreach ($datos as $clave => $valor) {
+            $claveCompleta = $prefijo ? "{$prefijo}.{$clave}" : $clave;
+
+            if (is_array($valor)) {
+                $this->seedDiccionario($lenguajeId, $valor, $claveCompleta);
+            } else {
+                InterfazTraduccion::firstOrCreate([
+                    'lenguaje_id' => $lenguajeId,
+                    'clave' => $claveCompleta,
+                ], [
+                    'valor' => $valor,
+                ]);
+            }
+        }
     }
 }

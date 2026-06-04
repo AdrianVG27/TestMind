@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('AUX_Lenguaje', function (Blueprint $table) {
             $table->id();
             $table->string('codigo', 10)->unique();
+            $table->string('descripcion');
             $table->timestamps();
         });
     }
