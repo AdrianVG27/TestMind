@@ -22,14 +22,19 @@ class User extends Authenticatable
         'email',
         'password',
         'avatar',
+        'paypal_subscription_id',
+        'paypal_status',
+        'subscription_ends_at',
     ];
 
     protected $hidden = [
         'password',
+        'remember_token',
     ];
 
     protected $casts = [
         'password' => 'hashed',
+        'subscription_ends_at' => 'datetime',
     ];
 
     public function socialAccount()
@@ -39,7 +44,7 @@ class User extends Authenticatable
 
     public function tier(): BelongsTo
     {
-        return $this->belongsTo(Tier::class, 'tier_codigo');
+        return $this->belongsTo(Tier::class, 'tier_codigo', 'codigo');
     }
 
     public function documento(): HasMany

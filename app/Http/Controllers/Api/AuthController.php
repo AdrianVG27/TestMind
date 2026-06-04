@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -33,7 +34,6 @@ class AuthController extends Controller
         }
 
         $tokenResult = $usuario->createToken('auth_token', [$role]);
-
         $tokenModel = $tokenResult->accessToken;
 
         $tokenModel->language = $request->header('language', 'es');
@@ -49,10 +49,16 @@ class AuthController extends Controller
         $tokenModel->save();
 
         return response()->json([
-            'id' => $usuario->id,
             'access_token' => $tokenResult->plainTextToken,
             'role' => $role,
             'expires_at' => $tokenModel->expires_at,
+            'data' => [
+                'id' => $usuario->id,
+                'name' => $usuario->name,
+                'nickname' => $usuario->nickname ?? '',
+                'email' => $usuario->email,
+                'plan' => $esAdmin ? 'admin' : ($usuario->tier_codigo ?? 'FREE'),
+            ],
         ]);
     }
 
@@ -65,10 +71,6 @@ class AuthController extends Controller
         ]);
     }
 
-    /**
-     * Registro PÚBLICO para Usuarios (Clientes).
-     * Bloquea el dominio corporativo por seguridad.
-     */
     public function register(Request $request)
     {
         $domain = config('app.corporate_domain');
@@ -94,21 +96,25 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'tier_codigo' => 'FREE',
         ]);
 
         $tokenResult = $user->createToken('auth_token', ['user']);
 
         return response()->json([
             'message' => 'Usuario registrado con éxito en TestMind',
-            'user' => $user,
             'access_token' => $tokenResult->plainTextToken,
-            'token_type' => 'Bearer',
+            'role' => 'user',
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'nickname' => '',
+                'email' => $user->email,
+                'plan' => 'FREE',
+            ],
         ], 201);
     }
 
-    /**
-     * Registro PRIVADO para Administradores.
-     */
     public function registerAdmin(Request $request)
     {
         $domain = config('app.corporate_domain');
@@ -129,5 +135,36 @@ class AuthController extends Controller
             'message' => 'Nuevo administrador dado de alta en el sistema',
             'admin' => $admin,
         ], 201);
+    }
+
+    public function me(Request $request)
+    {
+        $usuario = $request->user();
+        $esAdmin = $usuario instanceof Admin;
+
+        if (! $esAdmin && $usuario->tier_codigo !== 'FREE') {
+            if ($usuario->subscription_ends_at && $usuario->subscription_ends_at->isPast()) {
+
+                $usuario->update([
+                    'tier_codigo' => 'FREE',
+                    'paypal_subscription_id' => null,
+                    'paypal_status' => 'EXPIRED',
+                    'subscription_ends_at' => null,
+                ]);
+
+                Log::info("Ecosistema: El periodo de cortesía de {$usuario->email} ha concluido. Cuenta degradada a FREE de forma automática.");
+            }
+        }
+
+        return response()->json([
+            'role' => $esAdmin ? 'admin' : 'user',
+            'data' => [
+                'id' => $usuario->id,
+                'name' => $usuario->name,
+                'nickname' => $usuario->nickname ?? '',
+                'email' => $usuario->email,
+                'plan' => $esAdmin ? 'admin' : ($usuario->tier_codigo ?? 'FREE'),
+            ],
+        ]);
     }
 }

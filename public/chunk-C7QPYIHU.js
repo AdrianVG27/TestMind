@@ -1,0 +1,1 @@
+import{Y as i}from"./chunk-7N2KNBWD.js";var a=class t{transform(n,r){if(!r||!n)return"Sin categor\xEDa";let e=r.find(o=>o.codigo===n);return e?e.descripcion:"No encontrada"}static \u0275fac=function(r){return new(r||t)};static \u0275pipe=i({name:"getCategoria",type:t,pure:!0,standalone:!0})};export{a};

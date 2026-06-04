@@ -23,7 +23,14 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password')->nullable();
             $table->string('avatar')->nullable();
+
+            $table->string('paypal_subscription_id')->nullable()->unique();
+            $table->string('paypal_status')->nullable();
+            $table->timestamp('subscription_ends_at')->nullable();
+
             $table->timestamps();
+
+            $table->index(['paypal_subscription_id']);
         });
     }
 

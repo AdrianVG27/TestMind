@@ -6,23 +6,28 @@ use App\Http\Controllers\Api\CategoriaController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\IntentoController;
 use App\Http\Controllers\Api\InterfaceTranslationController;
+use App\Http\Controllers\Api\PayPalWebhookController;
 use App\Http\Controllers\Api\TablaApoyoController;
 use App\Http\Controllers\Api\TestController;
+use App\Http\Controllers\Api\TierController;
 use App\Models\Lenguaje;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/tier', [TierController::class, 'index']);
+Route::post('/webhooks/paypal', [PayPalWebhookController::class, 'handleWebhook']);
+
 Route::get('/i18n/{locale}', [InterfaceTranslationController::class, 'getJson']);
-Route::get('/idiomas-disponibles', function() {
+Route::get('/idiomas-disponibles', function () {
     try {
         return response()->json(
             Lenguaje::select(['codigo', 'descripcion'])->get()->values()
         );
     } catch (\Exception $e) {
-        \Log::error('Fallo crítico en el inicializador dinámico de idiomas: ' . $e->getMessage());
-        
+        \Log::error('Fallo crítico en el inicializador dinámico de idiomas: '.$e->getMessage());
+
         return response()->json([
-            ['codigo' => 'es', 'descripcion' => 'Castellano']
+            ['codigo' => 'es', 'descripcion' => 'Castellano'],
         ]);
     }
 });
@@ -43,17 +48,12 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::get('/me', function (Request $request) {
-        $user = $request->user();
-
-        return response()->json([
-            'data' => $user,
-            'role' => $user->currentAccessToken()->abilities[0] ?? 'unknown',
-            'type' => (new \ReflectionClass($user))->getShortName() == 'Admin' ? 'admin' : 'user',
-        ]);
-    });
+    Route::get('/me', [AuthController::class, 'me']);
 
     Route::prefix('user')->middleware('abilities:user')->group(function () {
+        Route::post('/paypal/vincular-suscripcion', [PayPalWebhookController::class, 'vincularSuscripcion']);
+        Route::post('/paypal/subscription/cancel', [PayPalWebhookController::class, 'cancelarSuscripcionActiva']);
+
         Route::apiResource('/documento', DocumentoController::class);
         Route::apiResource('/test', TestController::class);
         Route::post('/test/{test}/corregir', [TestController::class, 'corregir']);

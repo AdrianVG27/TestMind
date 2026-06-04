@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('codigo')->unique();
             $table->json('conf');
-            $table->boolean('valorUsado')->default(true);
+            $table->string('paypal_id')->nullable();
+            $table->boolean('valorUsado')->default(false);
             $table->timestamps();
         });
     }

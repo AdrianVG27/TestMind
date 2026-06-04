@@ -13,7 +13,17 @@ class Tier extends Model
     protected $fillable = [
         'codigo',
         'conf',
+        'paypal_id',
         'valorUsado',
+    ];
+    
+    protected $casts = [
+        'conf' => 'array',
+        'valorUsado' => 'boolean',
+    ];
+
+    protected $appends = [
+        'descripcion',
     ];
 
     public function lenguajes(): BelongsToMany
