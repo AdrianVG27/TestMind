@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Test extends Model
 {
@@ -27,8 +28,15 @@ class Test extends Model
         return $this->belongsTo(Documento::class);
     }
     
-    public function user()
+    public function user(): HasOneThrough
     {
-        return $this->documento->user();
+        return $this->hasOneThrough(
+            User::class,
+            Documento::class,
+            'id',
+            'id',
+            'documento_id',
+            'user_id'
+        );
     }
 }

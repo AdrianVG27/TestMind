@@ -45,10 +45,16 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
     });
 
     Route::prefix('admin')->middleware('abilities:admin')->group(function () {
-        Route::get('/metrics/users', [AdminDashboardController::class, 'userSegmentation']);
+
         Route::post('/register', [AuthController::class, 'registerAdmin']);
 
-        Route::prefix('tablaApoyo')->group(function (){
+        Route::prefix('metrics')->group(function () {
+            Route::get('/users', [AdminDashboardController::class, 'userSegmentation']);
+            Route::get('/tests-creados', [AdminDashboardController::class, 'testsCreadosTimeline']);
+            Route::get('/categorias', [AdminDashboardController::class, 'testsByCategory']);
+        });
+
+        Route::prefix('tablaApoyo')->group(function () {
             Route::get('/', [TablaApoyoController::class, 'indexTablas']);
             Route::get('/{id}', [TablaApoyoController::class, 'readRows']);
             Route::post('/{id}/row', [TablaApoyoController::class, 'createRow']);

@@ -1,1 +1,0 @@
-import"./chunk-2VMXMS7J.js";var t=[{path:"dashboard",loadComponent:()=>import("./chunk-MMRZYBTF.js").then(o=>o.DashboardComponent)},{path:"support-tables-management",loadComponent:()=>import("./chunk-7KRMKZPJ.js").then(o=>o.GestionTAComponent)}];export{t as ADMIN_ROUTES};
