@@ -43,7 +43,13 @@ class DatabaseSeeder extends Seeder
         $tierFree = Tier::firstOrCreate(
             ['codigo' => 'FREE'],
             [
-                'conf' => '{}',
+                'conf' => [
+                    'precio' => 0.00,
+                    'maxTests' => 2,
+                    'maxExportaciones' => 0,
+                    'maxPaginas' => 15,
+                    'maxPreguntas' => 10,
+                ],
                 'valorUsado' => true,
             ]
         );
@@ -78,7 +84,7 @@ class DatabaseSeeder extends Seeder
 
         TablaApoyo::create([
             'nombreTA' => 'TablaApoyo',
-            'descripcion' => 'Meta-Tabla del Sistema',
+            'descripcion' => 'Tabla sistema tablas apoyo',
         ]);
 
         User::create([

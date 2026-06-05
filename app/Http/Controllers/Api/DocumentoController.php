@@ -39,13 +39,10 @@ class DocumentoController extends Controller
         return DocumentoResource::collection($documentos);
     }
 
-    /**
-     * CREATE: Subir un PDF y guardarlo en storage/app/private.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'pdf' => 'required|file|mimes:pdf|max:12288', // 12MB Máx
+            'pdf' => 'required|file|mimes:pdf|max:12288',
             'categoria_codigo' => 'required|exists:AUX_Categoria,codigo',
             'isPublic' => 'boolean',
         ]);
@@ -81,9 +78,6 @@ class DocumentoController extends Controller
         }
     }
 
-    /**
-     * READ: Ver detalle de un documento específico.
-     */
     public function show(Documento $documento)
     {
         if (! $documento->isPublic) {
@@ -93,9 +87,6 @@ class DocumentoController extends Controller
         return response()->json($documento);
     }
 
-    /**
-     * UPDATE: Cambiar el nombre "legible" del documento.
-     */
     public function update(Request $request, Documento $documento)
     {
         $this->authorizeOwner($documento);
@@ -109,9 +100,6 @@ class DocumentoController extends Controller
         return response()->json($documento);
     }
 
-    /**
-     * DELETE: Borrar registro y archivo físico.
-     */
     public function destroy(Documento $documento)
     {
         $this->authorizeOwner($documento);

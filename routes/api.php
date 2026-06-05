@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
 use App\Http\Controllers\Api\DocumentoController;
+use App\Http\Controllers\Api\ExportacionController;
 use App\Http\Controllers\Api\IntentoController;
 use App\Http\Controllers\Api\InterfaceTranslationController;
 use App\Http\Controllers\Api\PayPalWebhookController;
@@ -11,7 +12,6 @@ use App\Http\Controllers\Api\TablaApoyoController;
 use App\Http\Controllers\Api\TestController;
 use App\Http\Controllers\Api\TierController;
 use App\Models\Lenguaje;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/tier', [TierController::class, 'index']);
@@ -59,6 +59,8 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
         Route::post('/test/{test}/corregir', [TestController::class, 'corregir']);
         Route::get('/intento', [IntentoController::class, 'index']);
         Route::get('/intento/{intento}', [IntentoController::class, 'show']);
+
+        Route::get('/test/{id}/exportar/moodle-gift', [ExportacionController::class, 'exportarAMoodleGift']);
     });
 
     Route::prefix('admin')->middleware('abilities:admin')->group(function () {

@@ -25,7 +25,10 @@ class TablaApoyoController extends Controller
             $nombreTabla = $tablaApoyo->nombreTA;
 
             if (! Schema::hasTable($nombreTabla)) {
-                return response()->json(['error' => "La tabla {$nombreTabla} no existe físicamente."], 404);
+                $tablaApoyo->delete();
+                $e = "La tabla {$nombreTabla} no existe físicamente.";
+                Log::error($e);
+                return response()->json(['error' => $e], 404);
             }
 
             $rows = DB::table($nombreTabla)->orderBy('id', 'asc')->get();
