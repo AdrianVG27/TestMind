@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PayPalWebhookController;
 use App\Http\Controllers\Api\TablaApoyoController;
 use App\Http\Controllers\Api\TestController;
 use App\Http\Controllers\Api\TierController;
+use App\Http\Middleware\CheckTierLimits;
 use App\Models\Lenguaje;
 use Illuminate\Support\Facades\Route;
 
@@ -50,7 +51,7 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
 
-    Route::prefix('user')->middleware('abilities:user')->group(function () {
+    Route::prefix('user')->middleware(['abilities:user', CheckTierLimits::class])->group(function () {
         Route::post('/paypal/vincular-suscripcion', [PayPalWebhookController::class, 'vincularSuscripcion']);
         Route::post('/paypal/subscription/cancel', [PayPalWebhookController::class, 'cancelarSuscripcionActiva']);
 

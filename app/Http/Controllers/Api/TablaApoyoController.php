@@ -28,6 +28,7 @@ class TablaApoyoController extends Controller
                 $tablaApoyo->delete();
                 $e = "La tabla {$nombreTabla} no existe físicamente.";
                 Log::error($e);
+
                 return response()->json(['error' => $e], 404);
             }
 
@@ -143,20 +144,22 @@ class TablaApoyoController extends Controller
             if ($nombreTabla === 'AUX_Tier') {
                 $filaActual = DB::table($nombreTabla)->where('id', $rowId)->first();
 
-                if (array_key_exists('valorUsado', $payloadAEditar)) {
-                    if ((bool) $payloadAEditar['valorUsado'] !== (bool) $filaActual->valorUsado) {
-                        return response()->json([
-                            'error' => 'Operación denegada: El estado "valorUsado" en los niveles de suscripción está gestionado automáticamente por los Webhooks de PayPal.',
-                        ], 422);
+                if ($filaActual->codigo != 'FREE') {
+                    if (array_key_exists('valorUsado', $payloadAEditar)) {
+                        if ((bool) $payloadAEditar['valorUsado'] !== (bool) $filaActual->valorUsado) {
+                            return response()->json([
+                                'error' => 'Operación denegada: El estado "valorUsado" en los niveles de suscripción está gestionado automáticamente por los Webhooks de PayPal.',
+                            ], 422);
+                        }
                     }
-                }
 
-                if (array_key_exists('conf', $payloadAEditar) && $filaActual) {
-                    $confActual = json_decode($filaActual->conf, true);
-                    if (! empty($confActual['paypalPlanId'])) {
-                        $desactivarPlanIdEnPayPal = $confActual['paypalPlanId'];
+                    if (array_key_exists('conf', $payloadAEditar) && $filaActual) {
+                        $confActual = json_decode($filaActual->conf, true);
+                        if (! empty($confActual['paypalPlanId'])) {
+                            $desactivarPlanIdEnPayPal = $confActual['paypalPlanId'];
 
-                        $payloadAEditar['valorUsado'] = false;
+                            $payloadAEditar['valorUsado'] = false;
+                        }
                     }
                 }
             }
