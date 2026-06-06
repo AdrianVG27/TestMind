@@ -262,4 +262,31 @@ class AuthController extends Controller
             ],
         ], 200);
     }
+
+    public function updateAdminPassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        try {
+            $admin = $request->user();
+
+            $admin->password = Hash::make($request->password);
+            $admin->save();
+
+            return response()->json([
+                'message' => 'Contraseña actualizada con éxito. El núcleo de TestMind ha encriptado tu nueva clave.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error en AuthController - updateAdminPassword: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.AuthController_updateAdminPassword.500',
+                'message' => 'Error interno al intentar actualizar la clave de encriptación.',
+            ], 500);
+        }
+    }
 }

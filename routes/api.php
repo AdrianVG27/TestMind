@@ -54,6 +54,7 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     Route::prefix('user')->middleware(['abilities:user', CheckTierLimits::class])->group(function () {
+
         Route::post('/update', [AuthController::class, 'updateProfile']);
 
         Route::post('/paypal/vincular-suscripcion', [PayPalWebhookController::class, 'vincularSuscripcion']);
@@ -71,6 +72,7 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
     Route::prefix('admin')->middleware('abilities:admin')->group(function () {
 
         Route::post('/register', [AuthController::class, 'registerAdmin']);
+        Route::post('/update', [AuthController::class, 'updateAdminPassword']);
 
         Route::prefix('metrics')->group(function () {
             Route::get('/users', [AdminDashboardController::class, 'userSegmentation']);
