@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->components->info('Iniciando el volcado completo de la base de datos de TestMind...');
+        $this->command->info('Iniciando el volcado completo de la base de datos de TestMind...');
 
         $tiempoMilisegundos = \Illuminate\Support\Benchmark::measure(function () {
 
@@ -139,7 +139,7 @@ class DatabaseSeeder extends Seeder
 
         $tiempoSegundos = round($tiempoMilisegundos / 1000, 2);
 
-        $this->command->components->info("¡Base de datos de TestMind poblada con éxito! Tiempo de ejecución total: {$tiempoSegundos} segundos.");
+        $this->command->info("¡Base de datos de TestMind poblada con éxito! Tiempo de ejecución total: {$tiempoSegundos} segundos.");
     }
 
     private function Tiers($es, $en, $gl)
