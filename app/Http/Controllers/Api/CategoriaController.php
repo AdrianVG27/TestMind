@@ -9,10 +9,6 @@ use Illuminate\Support\Facades\Log;
 
 class CategoriaController extends Controller
 {
-    /**
-     * Lista todas las categorías disponibles.
-     * Optimizado para el frontend de TestMind.
-     */
     public function index()
     {
         try {
@@ -32,9 +28,6 @@ class CategoriaController extends Controller
         }
     }
 
-    /**
-     * Muestra una categoría específica.
-     */
     public function show($id)
     {
         $categoria = Categoria::with('lenguajes')->find($id);

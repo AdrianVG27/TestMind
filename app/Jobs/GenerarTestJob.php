@@ -37,7 +37,7 @@ class GenerarTestJob implements ShouldQueue
      */
     public function handle(GeminiService $gemini): void
     {
-        $this->test->update(['estado' => 'procesando']);
+        $this->test->update(['estado_codigo' => 'EP']);
 
         try {
             $resultadoIA = $gemini->generarEstructuraTest(
@@ -47,7 +47,7 @@ class GenerarTestJob implements ShouldQueue
 
             $this->test->update([
                 'preguntas' => $resultadoIA['preguntas'] ?? $resultadoIA,
-                'estado' => 'completado',
+                'estado_codigo' => 'C',
             ]);
 
             Log::info("Test ID {$this->test->id} generado con éxito.");
@@ -56,7 +56,7 @@ class GenerarTestJob implements ShouldQueue
             Log::error("Error en GenerarTestJob para Test ID {$this->test->id}: ".$e->getMessage());
 
             if ($this->attempts() >= $this->tries) {
-                $this->test->update(['estado' => 'error']);
+                $this->test->update(['estado_codigo' => 'E']);
             }
 
             throw $e;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\MoodleGiftService;
 use App\Models\Test;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ExportacionController extends Controller
 {
@@ -18,27 +19,34 @@ class ExportacionController extends Controller
 
     public function exportarAMoodleGift(Request $request, $id)
     {
-        $test = Test::findOrFail($id);
+        try {
+            $test = Test::findOrFail($id);
 
-        $preguntas = $test->preguntas;
+            $preguntas = $test->preguntas;
 
-        if (!is_array($preguntas)) {
-            $preguntas = json_decode($preguntas, true);
-        }
+            if (!is_array($preguntas)) {
+                $preguntas = json_decode($preguntas, true);
+            }
 
-        if (empty($preguntas) || !is_array($preguntas)) {
+            if (empty($preguntas) || !is_array($preguntas)) {
+                return response()->json([
+                    'error' => 'El campo preguntas no contiene una colección de datos válida para la exportación.'
+                ], 422);
+            }
+
+            $textoGift = $this->giftService->jsonToGift($preguntas);
+
             return response()->json([
-                'error' => 'El campo preguntas no contiene una colección de datos válida para la exportación.'
-            ], 422);
+                'message' => 'Exportación generada con éxito.',
+                'data' => $textoGift
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error exportando Test ID ' . $id . ' a GIFT: ' . $e->getMessage());
+            
+            return response()->json([
+                'error' => 'Ocurrió un error interno al generar el formato de exportación.'
+            ], 500);
         }
-
-        $textoGift = $this->giftService->jsonToGift($preguntas);
-
-        $slugTitulo = str_replace(' ', '_', strtolower(preg_replace('/[^A-Za-z0-9 ]/', '', $test->titulo)));
-        $nombreArchivo = 'moodle_gift_' . ($slugTitulo ?: 'test_' . $test->id) . '_' . now()->format('Ymd_His') . '.txt';
-
-        return response($textoGift, 200)
-            ->header('Content-Type', 'text/plain; charset=utf-8')
-            ->header('Content-Disposition', 'attachment; filename="' . $nombreArchivo . '"');
     }
 }

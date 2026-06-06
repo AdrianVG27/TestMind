@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Admin;
 use App\Models\Categoria;
+use App\Models\Estado;
 use App\Models\InterfazTraduccion;
 use App\Models\Lenguaje;
 use App\Models\TablaApoyo;
@@ -60,8 +61,52 @@ class DatabaseSeeder extends Seeder
             $gl->id => ['descripcion' => 'Free'],
         ]);
 
+        $estadoPendiente = Estado::firstOrCreate(
+            ['codigo' => 'P'],
+            ['valorUsado' => true]
+        );
+
+        $estadoPendiente->lenguajes()->syncWithoutDetaching([
+            $es->id => ['descripcion' => 'Pendiente'],
+            $en->id => ['descripcion' => 'Pending'],
+            $gl->id => ['descripcion' => 'Pendente'],
+        ]);
+
+        $estadoEnProceso = Estado::firstOrCreate(
+            ['codigo' => 'EP'],
+            ['valorUsado' => true]
+        );
+
+        $estadoEnProceso->lenguajes()->syncWithoutDetaching([
+            $es->id => ['descripcion' => 'En Proceso'],
+            $en->id => ['descripcion' => 'In Progress'],
+            $gl->id => ['descripcion' => 'En Progreso'],
+        ]);
+
+        $estadoCompletado = Estado::firstOrCreate(
+            ['codigo' => 'C'],
+            ['valorUsado' => true]
+        );
+
+        $estadoCompletado->lenguajes()->syncWithoutDetaching([
+            $es->id => ['descripcion' => 'Completado'],
+            $en->id => ['descripcion' => 'Completed'],
+            $gl->id => ['descripcion' => 'Completado'],
+        ]);
+
+        $estadoFallo = Estado::firstOrCreate(
+            ['codigo' => 'F'],
+            ['valorUsado' => true]
+        );
+
+        $estadoFallo->lenguajes()->syncWithoutDetaching([
+            $es->id => ['descripcion' => 'Fallo'],
+            $en->id => ['descripcion' => 'Failed'],
+            $gl->id => ['descripcion' => 'Fallo'],
+        ]);
+
         $catInformatica = Categoria::firstOrCreate(
-            ['codigo' => 'INF_01'],
+            ['codigo' => 'INF'],
             ['valorUsado' => true]
         );
 
@@ -72,7 +117,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $catSalud = Categoria::firstOrCreate(
-            ['codigo' => 'SAL_01'],
+            ['codigo' => 'SAL'],
             ['valorUsado' => true]
         );
 

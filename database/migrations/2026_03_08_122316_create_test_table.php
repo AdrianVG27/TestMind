@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('test', function (Blueprint $table) {
             $table->id();
             $table->foreignId('documento_id')->constrained('documento')->onDelete('cascade');
+            $table->string('estado_codigo');
+            $table->foreign('estado_codigo')->references('codigo')->on('AUX_Estado')->onDelete('restrict');
             $table->string('titulo');
             $table->json('configuracion')->nullable();
             $table->json('preguntas')->nullable();
-            $table->string('estado')->default('pendiente');
             $table->timestamps();
         });
     }

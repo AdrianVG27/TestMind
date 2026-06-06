@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
+use App\Http\Controllers\Api\EstadoController;
 use App\Http\Controllers\Api\DocumentoController;
 use App\Http\Controllers\Api\ExportacionController;
 use App\Http\Controllers\Api\IntentoController;
@@ -38,6 +39,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::apiResource('/categoria', CategoriaController::class);
+Route::apiResource('/estado', EstadoController::class);
 Route::get('/documentos', [DocumentoController::class, 'indexPublic']);
 Route::get('/documentos/{documento}', [DocumentoController::class, 'show']);
 Route::get('/documentos/{documento}/descargar', [DocumentoController::class, 'descargar']);

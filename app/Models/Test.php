@@ -15,7 +15,7 @@ class Test extends Model
         'titulo',
         'configuracion',
         'preguntas',
-        'estado'
+        'estado_codigo'
     ];
 
     protected $casts = [
@@ -26,6 +26,11 @@ class Test extends Model
     public function documento(): BelongsTo
     {
         return $this->belongsTo(Documento::class);
+    }
+
+    public function estado(): BelongsTo
+    {
+        return $this->belongsTo(Estado::class, 'categoria_codigo', 'codigo');
     }
     
     public function user(): HasOneThrough

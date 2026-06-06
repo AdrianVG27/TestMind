@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TestEditResource extends JsonResource
+class EstadoResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,11 +16,9 @@ class TestEditResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'titulo' => $this->titulo,
-            'estado_codigo' => $this->estado_codigo,
-            'categoria_codigo' => $this->documento->categoria_codigo,
-            'documento_id' => $this->documento->id,
-            'configuracion' => $this->configuracion
+            'codigo' => $this->codigo,
+            'valorUsado' => (bool) $this->valorUsado,
+            'descripcion' => $this->descripcion,
         ];
     }
 }

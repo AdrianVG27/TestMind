@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Categoria extends Model
+class Estado extends Model
 {
-    protected $table = 'AUX_Categoria';
+        protected $table = 'AUX_Estado';
 
     protected $fillable = [
         'codigo',
@@ -28,8 +28,8 @@ class Categoria extends Model
     {
         return $this->belongsToMany(
             Lenguaje::class,
-            'AUX_Categoria_Lenguaje',
-            'categoria_id',
+            'AUX_Estado_Lenguaje',
+            'estado_id',
             'lenguaje_id'
         )
             ->withPivot('descripcion')
@@ -46,17 +46,17 @@ class Categoria extends Model
 
         return $this->belongsToMany(
             Lenguaje::class,
-            'AUX_Categoria_Lenguaje',
-            'categoria_id',
+            'AUX_Estado_Lenguaje',
+            'estado_id',
             'lenguaje_id'
         )
             ->withPivot('descripcion')
             ->where('AUX_Lenguaje.codigo', '=', $sessionLocale);
     }
 
-    public function documento(): HasMany
+    public function test(): HasMany
     {
-        return $this->hasMany(Documento::class, 'categoria_codigo', 'codigo');
+        return $this->hasMany(Test::class, 'estado_codigo', 'codigo');
     }
 
     public function getDescripcionAttribute(): ?string
@@ -65,4 +65,5 @@ class Categoria extends Model
 
         return $traduccion ? $traduccion->pivot->descripcion : $this->codigo;
     }
+
 }

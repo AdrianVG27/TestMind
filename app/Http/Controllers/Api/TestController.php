@@ -18,7 +18,7 @@ class TestController extends Controller
     {
         try {
             $tests = Test::query()
-                ->where('estado', 'completado')
+                ->where('estado_codigo', 'C')
                 ->with(['documento.categoria.lenguajes'])
                 ->when($request->titulo, function ($query, $titulo) {
                     $query->where('titulo', 'like', '%'.$titulo.'%');
@@ -60,7 +60,6 @@ class TestController extends Controller
                 ->paginate(20);
 
             return TestEditResource::collection($tests);
-
         } catch (\Exception $e) {
             Log::error('Error en TestMind - index (privado): '.$e->getMessage());
 
@@ -94,7 +93,7 @@ class TestController extends Controller
             'documento_id' => $documento->id,
             'titulo' => $request->titulo,
             'configuracion' => $request->only(['nivel', 'total', 'prop_unica', 'prop_multi', 'prop_escribir', 'min_opciones', 'max_opciones', 'input_user']),
-            'estado' => 'pendiente',
+            'estado_codigo' => 'P',
         ]);
 
         GenerarTestJob::dispatch($test);
@@ -129,7 +128,7 @@ class TestController extends Controller
             abort(403);
         }
 
-        $test->update(['configuracion' => $request->input('configuracion'), 'estado' => 'pendiente']);
+        $test->update(['configuracion' => $request->input('configuracion'), 'estado_codigo' => 'P']);
         GenerarTestJob::dispatch($test);
 
         return response()->json($test);
@@ -158,7 +157,7 @@ class TestController extends Controller
             'titulo' => $test->titulo,
             'configuracion' => $test->configuracion,
             'preguntas' => $preguntasOcultas,
-            'estado' => $test->estado,
+            'estado_codigo' => $test->estado_codigo,
         ]);
     }
 
