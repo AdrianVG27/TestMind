@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Lenguaje;
 use App\Models\InterfazTraduccion;
+use App\Models\Lenguaje;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class InterfaceTranslationController extends Controller
 {
@@ -16,8 +16,11 @@ class InterfaceTranslationController extends Controller
         try {
             $lenguaje = Lenguaje::where('codigo', $locale)->first();
 
-            if (!$lenguaje) {
-                return response()->json([], 404);
+            if (! $lenguaje) {
+                return response()->json([
+                    'error_key' => 'error.InterfaceTranslationController_getJson.404',
+                    'message' => 'El idioma solicitado no existe en el sistema.',
+                ], 404);
             }
 
             $traducciones = InterfazTraduccion::where('lenguaje_id', $lenguaje->id)
@@ -32,8 +35,12 @@ class InterfaceTranslationController extends Controller
             return response()->json($jsonEstructurado);
 
         } catch (\Exception $e) {
-            Log::error("Error crítico sirviendo JSON de Transloco ({$locale}): " . $e->getMessage());
-            return response()->json(['error' => 'No se pudo compilar el archivo de idioma.'], 500);
+            Log::error("Error crítico sirviendo JSON de Transloco ({$locale}): ".$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.InterfaceTranslationController_getJson.500',
+                'message' => 'No se pudo compilar el archivo de idioma.',
+            ], 500);
         }
     }
 
@@ -47,15 +54,19 @@ class InterfaceTranslationController extends Controller
                         'id' => $item->id,
                         'clave' => $item->clave,
                         'valor' => $item->valor,
-                        'lenguaje_codigo' => $item->lenguaje?->codigo
+                        'lenguaje_codigo' => $item->lenguaje?->codigo,
                     ];
                 });
 
             return response()->json($traducciones);
 
         } catch (\Exception $e) {
-            Log::error('Error en InterfaceTranslationController - index: ' . $e->getMessage());
-            return response()->json(['error' => 'Error al recuperar el catálogo de literales.'], 500);
+            Log::error('Error en InterfaceTranslationController - index: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.InterfaceTranslationController_index.500',
+                'message' => 'Error al recuperar el catálogo de literales.',
+            ], 500);
         }
     }
 
@@ -64,7 +75,7 @@ class InterfaceTranslationController extends Controller
         $request->validate([
             'clave' => 'required|string',
             'lenguaje_codigo' => 'required|string|exists:AUX_Lenguaje,codigo',
-            'valor' => 'required|string'
+            'valor' => 'required|string',
         ]);
 
         $claveLimpia = trim($request->clave);
@@ -81,14 +92,14 @@ class InterfaceTranslationController extends Controller
                 ['valor' => $request->valor]
             );
 
-            if (!$existeClave) {
+            if (! $existeClave) {
                 $otrosLenguajes = Lenguaje::where('id', '!=', $lenguajeObjetivo->id)->get();
 
                 foreach ($otrosLenguajes as $lenguaje) {
                     InterfazTraduccion::create([
                         'lenguaje_id' => $lenguaje->id,
                         'clave' => $claveLimpia,
-                        'valor' => ''
+                        'valor' => '',
                     ]);
                 }
             }
@@ -100,37 +111,48 @@ class InterfaceTranslationController extends Controller
                 'data' => [
                     'id' => $traduccionOriginal->id,
                     'clave' => $traduccionOriginal->clave,
-                    'valor' => $traduccionOriginal->valor
-                ]
+                    'valor' => $traduccionOriginal->valor,
+                ],
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error en InterfaceTranslationController - updateKey: ' . $e->getMessage());
-            return response()->json(['error' => 'Fallo al sincronizar e instanciar la clave en los diccionarios.'], 500);
+            Log::error('Error en InterfaceTranslationController - updateKey: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.InterfaceTranslationController_updateKey.500',
+                'message' => 'Fallo al sincronizar e instanciar la clave en los diccionarios.',
+            ], 500);
         }
     }
 
     public function destroyKey(Request $request)
     {
         $request->validate([
-            'clave' => 'required|string'
+            'clave' => 'required|string',
         ]);
 
         try {
             $filasBorradas = InterfazTraduccion::where('clave', trim($request->clave))->delete();
 
             if ($filasBorradas === 0) {
-                return response()->json(['error' => 'La clave especificada no existe.'], 404);
+                return response()->json([
+                    'error_key' => 'error.InterfaceTranslationController_destroyKey.404',
+                    'message' => 'La clave especificada no existe.',
+                ], 404);
             }
 
             return response()->json([
-                'message' => "La clave '{$request->clave}' ha sido purgada globalmente del sistema ({$filasBorradas} entradas eliminadas)."
+                'message' => "La clave '{$request->clave}' ha sido purgada globalmente del sistema ({$filasBorradas} entradas eliminadas).",
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error en InterfaceTranslationController - destroyKey: ' . $e->getMessage());
-            return response()->json(['error' => 'Error de consistencia al purgar el literal.'], 500);
+            Log::error('Error en InterfaceTranslationController - destroyKey: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.InterfaceTranslationController_destroyKey.500',
+                'message' => 'Error de consistencia al purgar el literal.',
+            ], 500);
         }
     }
 
@@ -155,13 +177,17 @@ class InterfaceTranslationController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => "Idioma '{$lenguaje->descripcion}' eliminado. Se han purgado {$traduccionesBorradas} literales de interfaz."
+                'message' => "Idioma '{$lenguaje->descripcion}' eliminado. Se han purgado {$traduccionesBorradas} literales de interfaz.",
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error en InterfaceTranslationController - destroyLanguage: ' . $e->getMessage());
-            return response()->json(['error' => 'Fallo al eliminar el idioma y sus diccionarios vinculados.'], 500);
+            Log::error('Error en InterfaceTranslationController - destroyLanguage: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.InterfaceTranslationController_destroyLanguage.500',
+                'message' => 'Fallo al eliminar el idioma y sus diccionarios vinculados.',
+            ], 500);
         }
     }
 }

@@ -10,12 +10,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class TablaApoyoController extends Controller
 {
     public function indexTablas()
     {
-        return response()->json(TablaApoyo::all());
+        try {
+            return response()->json(TablaApoyo::all());
+        } catch (\Exception $e) {
+            Log::error('Error en TablaApoyoController - indexTablas: ' . $e->getMessage());
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_indexTablas.500',
+                'message' => 'Error al recuperar el catálogo de tablas de apoyo.'
+            ], 500);
+        }
     }
 
     public function readRows($id)
@@ -26,10 +35,12 @@ class TablaApoyoController extends Controller
 
             if (! Schema::hasTable($nombreTabla)) {
                 $tablaApoyo->delete();
-                $e = "La tabla {$nombreTabla} no existe físicamente.";
-                Log::error($e);
+                Log::error("La tabla {$nombreTabla} no existe físicamente en el motor de base de datos.");
 
-                return response()->json(['error' => $e], 404);
+                return response()->json([
+                    'error_key' => 'error.TablaApoyoController_readRows.404',
+                    'message' => 'La estructura física solicitada ha dejado de existir.'
+                ], 404);
             }
 
             $rows = DB::table($nombreTabla)->orderBy('id', 'asc')->get();
@@ -40,10 +51,17 @@ class TablaApoyoController extends Controller
                 'tieneLenguajes' => (bool) $tablaApoyo->tieneLenguajes,
                 'registros' => $rows,
             ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_readRows.404',
+                'message' => 'El mapa relacional de la tabla de apoyo no existe.'
+            ], 404);
         } catch (\Exception $e) {
-            Log::error('Error en ReadRows: '.$e->getMessage());
-
-            return response()->json(['error' => 'Error al leer la tabla de apoyo.'], 500);
+            Log::error('Error en TablaApoyoController - readRows: '.$e->getMessage());
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_readRows.500',
+                'message' => 'Error al leer los registros de la tabla de apoyo.'
+            ], 500);
         }
     }
 
@@ -56,16 +74,25 @@ class TablaApoyoController extends Controller
             $payloadAInsertar = $request->except(['id', 'created_at', 'updated_at']);
 
             if (empty($payloadAInsertar)) {
-                return response()->json(['error' => 'No se han enviado datos válidos.'], 400);
+                return response()->json([
+                    'error_key' => 'error.TablaApoyoController_createRow.400',
+                    'message' => 'No se han enviado datos válidos para procesar la inserción.'
+                ], 400);
             }
 
             if (array_key_exists('codigo', $payloadAInsertar)) {
                 $codigo = trim($payloadAInsertar['codigo']);
                 if (empty($codigo)) {
-                    return response()->json(['error' => 'El campo CÓDIGO es obligatorio.'], 422);
+                    return response()->json([
+                        'error_key' => 'error.TablaApoyoController_createRow.422',
+                        'message' => 'El campo CÓDIGO es obligatorio.'
+                    ], 422);
                 }
                 if (DB::table($nombreTabla)->where('codigo', $codigo)->exists()) {
-                    return response()->json(['error' => "El código '{$codigo}' ya existe."], 422);
+                    return response()->json([
+                        'error_key' => 'error.TablaApoyoController_createRow.422_duplicate',
+                        'message' => "El código '{$codigo}' ya se encuentra registrado en el sistema."
+                    ], 422);
                 }
                 $payloadAInsertar['codigo'] = $codigo;
             }
@@ -82,7 +109,6 @@ class TablaApoyoController extends Controller
 
                 $conf['paypalPlanId'] = null;
                 $payloadAInsertar['conf'] = json_encode($conf);
-
                 $payloadAInsertar['valorUsado'] = false;
 
                 if ($precioPlan > 0) {
@@ -124,11 +150,18 @@ class TablaApoyoController extends Controller
                 })->afterResponse();
             }
 
-            return response()->json(['message' => 'Creado con éxito en estado pendiente.', 'data' => $nuevoRegistro], 201);
+            return response()->json(['message' => 'Creado con éxito.', 'data' => $nuevoRegistro], 201);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_createRow.404',
+                'message' => 'La tabla relacional parametrizada no existe.'
+            ], 404);
         } catch (\Exception $e) {
-            Log::error('Error en CreateRow con gancho multiidioma: '.$e->getMessage());
-
-            return response()->json(['error' => 'Error al insertar el registro maestro.'], 500);
+            Log::error('Error en TablaApoyoController - createRow: '.$e->getMessage());
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_createRow.500',
+                'message' => 'Error al insertar el registro maestro en el motor físico.'
+            ], 500);
         }
     }
 
@@ -144,23 +177,27 @@ class TablaApoyoController extends Controller
             if ($nombreTabla === 'AUX_Tier') {
                 $filaActual = DB::table($nombreTabla)->where('id', $rowId)->first();
 
-                if ($filaActual->codigo != 'FREE') {
+                if ($filaActual && $filaActual->codigo !== 'FREE') {
                     if (array_key_exists('valorUsado', $payloadAEditar)) {
                         if ((bool) $payloadAEditar['valorUsado'] !== (bool) $filaActual->valorUsado) {
                             return response()->json([
-                                'error' => 'Operación denegada: El estado "valorUsado" en los niveles de suscripción está gestionado automáticamente por los Webhooks de PayPal.',
+                                'error_key' => 'error.TablaApoyoController_updateRow.422_valorUsado',
+                                'message' => 'Operación denegada: El estado de uso está gestionado automáticamente por los Webhooks de PayPal.',
                             ], 422);
                         }
                     }
 
-                    if (array_key_exists('conf', $payloadAEditar) && $filaActual) {
-                        $confActual = json_decode($filaActual->conf, true);
+                    if (array_key_exists('conf', $payloadAEditar)) {
+                        $confActual = is_string($filaActual->conf) ? json_decode($filaActual->conf, true) : $filaActual->conf;
                         if (! empty($confActual['paypalPlanId'])) {
                             $desactivarPlanIdEnPayPal = $confActual['paypalPlanId'];
-
                             $payloadAEditar['valorUsado'] = false;
                         }
                     }
+                }
+
+                if (array_key_exists('conf', $payloadAEditar) && is_array($payloadAEditar['conf'])) {
+                    $payloadAEditar['conf'] = json_encode($payloadAEditar['conf']);
                 }
             }
 
@@ -170,7 +207,8 @@ class TablaApoyoController extends Controller
                 if ($filaActual && strtolower($filaActual->nombreTA) === 'tablaapoyo') {
                     if (array_key_exists('nombreTA', $payloadAEditar) && trim($payloadAEditar['nombreTA']) !== $filaActual->nombreTA) {
                         return response()->json([
-                            'error' => 'Operación denegada: No se permite alterar el nombre físico de la "TablaApoyo" primaria porque el sistema perdería su mapa relacional.',
+                            'error_key' => 'error.TablaApoyoController_updateRow.422_root',
+                            'message' => 'Operación denegada: No se permite alterar la identidad física de la tabla relacional maestra.',
                         ], 422);
                     }
                 }
@@ -190,10 +228,17 @@ class TablaApoyoController extends Controller
             }
 
             return response()->json(['message' => 'Actualizado con éxito.', 'data' => $registroActualizado]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_updateRow.404',
+                'message' => 'Estructura relacional o mapa dinámico no localizado.'
+            ], 404);
         } catch (\Exception $e) {
-            Log::error('Error en UpdateRow Protegido: '.$e->getMessage());
-
-            return response()->json(['error' => 'Error al actualizar el registro.'], 500);
+            Log::error('Error en TablaApoyoController - updateRow: '.$e->getMessage());
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_updateRow.500',
+                'message' => 'Error crítico al procesar la actualización del registro.'
+            ], 500);
         }
     }
 
@@ -207,7 +252,7 @@ class TablaApoyoController extends Controller
             if ($nombreTabla === 'AUX_Tier') {
                 $filaABorrar = DB::table($nombreTabla)->where('id', $rowId)->first();
                 if ($filaABorrar) {
-                    $conf = json_decode($filaABorrar->conf, true);
+                    $conf = is_string($filaABorrar->conf) ? json_decode($filaABorrar->conf, true) : $filaABorrar->conf;
                     if (! empty($conf['paypalPlanId'])) {
                         $planIdADesactivar = $conf['paypalPlanId'];
                     }
@@ -219,7 +264,8 @@ class TablaApoyoController extends Controller
 
                 if ($filaABorrar && strtolower($filaABorrar->nombreTA) === 'tablaapoyo') {
                     return response()->json([
-                        'error' => 'Operación cancelada: No se permite eliminar el registro raíz de "TablaApoyo" porque destruiría la integridad del panel dinámico.',
+                        'error_key' => 'error.TablaApoyoController_deleteRow.422_root',
+                        'message' => 'Operación cancelada: No se permite purgar los nodos estructurales del mapa relacional.',
                     ], 422);
                 }
             }
@@ -240,10 +286,17 @@ class TablaApoyoController extends Controller
 
             return response()->json(null, 204);
 
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_deleteRow.404',
+                'message' => 'Nodo maestro o registro relacional no localizado.'
+            ], 404);
         } catch (\Exception $e) {
-            Log::error('Error en DeleteRow Protegido con cascada: '.$e->getMessage());
-
-            return response()->json(['error' => 'No se pudo eliminar el registro debido a dependencias activas.'], 500);
+            Log::error('Error en TablaApoyoController - deleteRow: '.$e->getMessage());
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_deleteRow.500',
+                'message' => 'No se pudo eliminar el registro debido a dependencias activas en el motor relacional.'
+            ], 500);
         }
     }
 
@@ -257,7 +310,10 @@ class TablaApoyoController extends Controller
             $fkSugerida = strtolower(str_replace('AUX_', '', $nombreTabla)).'_id';
 
             if (! Schema::hasTable($tablaTraduccion)) {
-                return response()->json(['error' => "La estructura multiidioma para {$nombreTabla} no existe."], 404);
+                return response()->json([
+                    'error_key' => 'error.TablaApoyoController_getRowLanguages.404_schema',
+                    'message' => "La estructura multiidioma para la tabla física especificada no existe."
+                ], 404);
             }
 
             $idiomasGlobales = DB::table('AUX_Lenguaje')->orderBy('id', 'asc')->get();
@@ -283,10 +339,17 @@ class TablaApoyoController extends Controller
 
             return response()->json($resultado);
 
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_getRowLanguages.404',
+                'message' => 'Estructura relacional o mapa no localizado.'
+            ], 404);
         } catch (\Exception $e) {
-            Log::error('Error dinámico en getRowLanguages: '.$e->getMessage());
-
-            return response()->json(['error' => 'No se pudieron recuperar las traducciones.'], 500);
+            Log::error('Error en TablaApoyoController - getRowLanguages: '.$e->getMessage());
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_getRowLanguages.500',
+                'message' => 'No se pudieron recuperar las traducciones de la fila seleccionada.'
+            ], 500);
         }
     }
 
@@ -301,7 +364,10 @@ class TablaApoyoController extends Controller
             $loteTraducciones = $request->input('traducciones', []);
 
             if (empty($loteTraducciones)) {
-                return response()->json(['error' => 'No se han enviado traducciones.'], 400);
+                return response()->json([
+                    'error_key' => 'error.TablaApoyoController_updateRowLanguages.400',
+                    'message' => 'No se han enviado traducciones válidas para procesar el lote.'
+                ], 400);
             }
 
             DB::transaction(function () use ($tablaTraduccion, $fkSugerida, $loteTraducciones, $rowId) {
@@ -332,10 +398,17 @@ class TablaApoyoController extends Controller
 
             return response()->json(['message' => 'Catálogo multiidioma optimizado y guardado con éxito.']);
 
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_updateRowLanguages.404',
+                'message' => 'La tabla de traducción parametrizada no existe.'
+            ], 404);
         } catch (\Exception $e) {
-            Log::error('Error dinámico en updateRowLanguages: '.$e->getMessage());
-
-            return response()->json(['error' => 'Error interno al persistir el lote idiomático.'], 500);
+            Log::error('Error en TablaApoyoController - updateRowLanguages: '.$e->getMessage());
+            return response()->json([
+                'error_key' => 'error.TablaApoyoController_updateRowLanguages.500',
+                'message' => 'Error interno al persistir el lote idiomático en la base de datos.'
+            ], 500);
         }
     }
 
@@ -353,8 +426,7 @@ class TablaApoyoController extends Controller
                 ]);
 
             if ($tokenResponse->failed()) {
-                Log::error("PayPal Async Auth: No se pudo obtener el token para el plan {$codigoPlan}.");
-
+                Log::error("PayPal Async Auth Failure: No se pudo obtener el token para el plan {$codigoPlan}.");
                 return;
             }
 
@@ -400,7 +472,6 @@ class TablaApoyoController extends Controller
 
             if ($planResponse->failed()) {
                 Log::error("PayPal Async Create Plan Failure [{$codigoPlan}]: ".$planResponse->body());
-
                 return;
             }
 
@@ -412,12 +483,8 @@ class TablaApoyoController extends Controller
                     'paypal_id' => $paypalPlanId,
                     'valorUsado' => true,
                 ]);
-
-                Log::info("PayPal Redundancy Success: El Tier '{$codigoPlan}' ha sido enlazado directamente con el ID [{$paypalPlanId}] en background.");
+                Log::info("PayPal Redundancy Success: El Tier '{$codigoPlan}' ha sido enlazado dinámicamente en background.");
             }
-
-            Log::info("PayPal Async Success: Solicitud enviada para el Tier '{$codigoPlan}'. El Webhook confirmará la transacción cuando Sandbox procese la cola.");
-
         } catch (\Exception $e) {
             Log::error("Excepción en hilo asíncrono de PayPal para el Tier {$codigoPlan}: ".$e->getMessage());
         }
@@ -437,7 +504,6 @@ class TablaApoyoController extends Controller
 
             if ($tokenResponse->failed()) {
                 Log::error("PayPal Async Deactivate Auth: Fallo al autenticar para dar de baja el plan {$paypalPlanId}.");
-
                 return;
             }
 
@@ -448,7 +514,6 @@ class TablaApoyoController extends Controller
 
             if ($deactivateResponse->failed()) {
                 Log::error("PayPal API Deactivate Failure [Plan: {$paypalPlanId}]: ".$deactivateResponse->body());
-
                 return;
             }
 
@@ -456,8 +521,7 @@ class TablaApoyoController extends Controller
                 'valorUsado' => false,
             ]);
 
-            Log::info("PayPal Async Success: El plan de suscripción '{$paypalPlanId}' ha sido marcado como INACTIVE y actualizado localmente.");
-
+            Log::info("PayPal Async Success: El plan de suscripción '{$paypalPlanId}' ha sido marcado como INACTIVE.");
         } catch (\Exception $e) {
             Log::error("Excepción crítica al desactivar el plan {$paypalPlanId} en PayPal: ".$e->getMessage());
         }

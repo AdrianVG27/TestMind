@@ -40,8 +40,8 @@ class AdminDashboardController extends Controller
             Log::error('Error en TestMind Admin - userSegmentation: '.$e->getMessage());
 
             return response()->json([
-                'error' => 'Error al recuperar las métricas de segmentación de membresías.',
-                'codigo' => 'ERR_ADMIN_SEG_01',
+                'error_key' => 'error.AdminDashboardController_userSegmentation.500',
+                'message' => 'Error al recuperar las métricas de segmentación de membresías.',
             ], 500);
         }
     }
@@ -81,11 +81,11 @@ class AdminDashboardController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error en TestMind Admin - testsCreadosTimeline: '.$e->getMessage());
+            Log::error('Error en TestMind Admin - testsCreadosTimeline: '.$e->getMessage());
 
             return response()->json([
-                'error' => 'Fallo al procesar la línea temporal de actividad de contenidos.',
-                'codigo' => 'ERR_ADMIN_TIME_01',
+                'error_key' => 'error.AdminDashboardController_testsCreadosTimeline.500',
+                'message' => 'Fallo al procesar la línea temporal de actividad de contenidos.',
             ], 500);
         }
     }
@@ -123,11 +123,11 @@ class AdminDashboardController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error en AdminDashboardController - testsByCategory: '.$e->getMessage());
+            Log::error('Error en AdminDashboardController - testsByCategory: '.$e->getMessage());
 
             return response()->json([
-                'error' => 'Fallo al procesar el reparto analítico por categorías.',
-                'codigo' => 'ERR_ADMIN_CAT_01'
+                'error_key' => 'error.AdminDashboardController_testsByCategory.500',
+                'message' => 'Fallo al procesar el reparto analítico por categorías.'
             ], 500);
         }
     }

@@ -22,20 +22,33 @@ class CategoriaController extends Controller
             Log::error('Error en TestMind CategoriaController@index: '.$e->getMessage());
 
             return response()->json([
-                'error' => 'No se pudieron recuperar las categorías',
-                'codigo' => 'ERR_CAT_01',
+                'error_key' => 'error.CategoriaController_index.500',
+                'message' => 'No se pudieron recuperar las categorías.'
             ], 500);
         }
     }
 
     public function show($id)
     {
-        $categoria = Categoria::with('lenguajes')->find($id);
+        try {
+            $categoria = Categoria::with('lenguajes')->find($id);
 
-        if (! $categoria) {
-            return response()->json(['message' => 'Categoría no encontrada'], 404);
+            if (! $categoria) {
+                return response()->json([
+                    'error_key' => 'error.CategoriaController_show.404',
+                    'message' => 'Categoría no encontrada.'
+                ], 404);
+            }
+
+            return $categoria;
+
+        } catch (\Exception $e) {
+            Log::error('Error en TestMind CategoriaController@show: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.CategoriaController_show.500',
+                'message' => 'Error interno al recuperar los detalles de la categoría.'
+            ], 500);
         }
-
-        return $categoria;
     }
 }

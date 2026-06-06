@@ -25,7 +25,8 @@ class TierController extends Controller
 
             return response()->json([
                 'success' => false,
-                'error' => 'No se ha podido recuperar el catálogo de suscripciones.',
+                'error_key' => 'error.TierController_index.500',
+                'message' => 'No se ha podido recuperar el catálogo de suscripciones.',
             ], 500);
         }
     }
