@@ -54,6 +54,8 @@ Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     Route::prefix('user')->middleware(['abilities:user', CheckTierLimits::class])->group(function () {
+        Route::post('/update', [AuthController::class, 'updateProfile']);
+
         Route::post('/paypal/vincular-suscripcion', [PayPalWebhookController::class, 'vincularSuscripcion']);
         Route::post('/paypal/subscription/cancel', [PayPalWebhookController::class, 'cancelarSuscripcionActiva']);
 

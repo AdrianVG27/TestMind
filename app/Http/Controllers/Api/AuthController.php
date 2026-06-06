@@ -7,9 +7,10 @@ use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -65,11 +66,11 @@ class AuthController extends Controller
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            Log::error('Error en AuthController - login: ' . $e->getMessage());
+            Log::error('Error en AuthController - login: '.$e->getMessage());
 
             return response()->json([
                 'error_key' => 'error.AuthController_login.500',
-                'message' => 'Error interno al procesar el inicio de sesión.'
+                'message' => 'Error interno al procesar el inicio de sesión.',
             ], 500);
         }
     }
@@ -82,13 +83,13 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Sesión cerrada',
             ]);
-            
+
         } catch (\Exception $e) {
-            Log::error('Error en AuthController - logout: ' . $e->getMessage());
+            Log::error('Error en AuthController - logout: '.$e->getMessage());
 
             return response()->json([
                 'error_key' => 'error.AuthController_logout.500',
-                'message' => 'Error interno al cerrar la sesión.'
+                'message' => 'Error interno al cerrar la sesión.',
             ], 500);
         }
     }
@@ -138,11 +139,11 @@ class AuthController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            Log::error('Error en AuthController - register: ' . $e->getMessage());
+            Log::error('Error en AuthController - register: '.$e->getMessage());
 
             return response()->json([
                 'error_key' => 'error.AuthController_register.500',
-                'message' => 'Error interno al registrar el usuario.'
+                'message' => 'Error interno al registrar el usuario.',
             ], 500);
         }
     }
@@ -170,11 +171,11 @@ class AuthController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            Log::error('Error en AuthController - registerAdmin: ' . $e->getMessage());
+            Log::error('Error en AuthController - registerAdmin: '.$e->getMessage());
 
             return response()->json([
                 'error_key' => 'error.AuthController_registerAdmin.500',
-                'message' => 'Error interno al registrar el administrador.'
+                'message' => 'Error interno al registrar el administrador.',
             ], 500);
         }
     }
@@ -211,12 +212,54 @@ class AuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error en AuthController - me: ' . $e->getMessage());
+            Log::error('Error en AuthController - me: '.$e->getMessage());
 
             return response()->json([
                 'error_key' => 'error.AuthController_me.500',
-                'message' => 'Error interno al recuperar los datos del perfil activo.'
+                'message' => 'Error interno al recuperar los datos del perfil activo.',
             ], 500);
         }
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('user', 'email')->ignore($user->id),
+            ],
+            'nickname' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('user', 'nickname')->ignore($user->id),
+            ],
+            'password' => ['sometimes', 'nullable', 'string', Password::defaults()],
+        ]);
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->nickname = $data['nickname'];
+
+        if (isset($data['password']) && ! empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => 'Perfil actualizado con éxito en el núcleo de TestMind.',
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'nickname' => $user->nickname,
+            ],
+        ], 200);
     }
 }
