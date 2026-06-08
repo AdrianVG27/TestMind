@@ -1,1 +1,0 @@
-import{Y as i}from"./chunk-3QQMR7WW.js";var p=class n{transform(r,e){if(!r)return"SIN_PLAN_";if(!e||e.length===0)return r.toUpperCase();let t=e.find(o=>o.codigo.toUpperCase()===r.toUpperCase());return t?t.descripcion||t.codigo:r.toUpperCase()}static \u0275fac=function(e){return new(e||n)};static \u0275pipe=i({name:"getTier",type:n,pure:!0,standalone:!0})};export{p as a};
