@@ -13,12 +13,24 @@ return new class extends Migration
     {
         Schema::create('user', function (Blueprint $table) {
             $table->id();
+            $table->string('tier_codigo')->default('FREE');
+            $table->foreign('tier_codigo')
+                  ->references('codigo')
+                  ->on('AUX_Tier')
+                  ->onDelete('restrict');
             $table->string('name');
             $table->string('nickname')->nullable();
             $table->string('email')->unique();
             $table->string('password')->nullable();
             $table->string('avatar')->nullable();
+
+            $table->string('paypal_subscription_id')->nullable()->unique();
+            $table->string('paypal_status')->nullable();
+            $table->timestamp('subscription_ends_at')->nullable();
+
             $table->timestamps();
+
+            $table->index(['paypal_subscription_id']);
         });
     }
 

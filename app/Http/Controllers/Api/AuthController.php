@@ -7,8 +7,10 @@ use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -20,67 +22,271 @@ class AuthController extends Controller
             'remember' => ['nullable', 'boolean'],
         ]);
 
-        $esAdmin = str_ends_with($request->email, '@testmind.com');
-        $modelo = $esAdmin ? Admin::class : User::class;
-        $role = $esAdmin ? 'admin' : 'user';
+        try {
+            $domain = config('app.corporate_domain');
 
-        $usuario = $modelo::where('email', $request->email)->first();
+            $esAdmin = str_ends_with($request->email, '@'.$domain);
+            $modelo = $esAdmin ? Admin::class : User::class;
+            $role = $esAdmin ? 'admin' : 'user';
 
-        if (! $usuario || ! Hash::check($request->password, $usuario->password)) {
-            throw ValidationException::withMessages(['email' => ['Credenciales incorrectas']]);
+            $usuario = $modelo::where('email', $request->email)->first();
+
+            if (! $usuario || ! Hash::check($request->password, $usuario->password)) {
+                throw ValidationException::withMessages(['email' => ['Credenciales incorrectas']]);
+            }
+
+            $tokenResult = $usuario->createToken('auth_token', [$role]);
+            $tokenModel = $tokenResult->accessToken;
+
+            $tokenModel->language = $request->header('language', 'es');
+            $tokenModel->remember_me = $request->boolean('remember', false);
+
+            if ($esAdmin) {
+                $tokenModel->expires_at = now()->addMinutes(30);
+            } else {
+                $tokenModel->expires_at = $tokenModel->remember_me ? now()->addDays(30) : now()->addHour();
+            }
+
+            $tokenModel->timestamps = false;
+            $tokenModel->save();
+
+            return response()->json([
+                'access_token' => $tokenResult->plainTextToken,
+                'role' => $role,
+                'expires_at' => $tokenModel->expires_at,
+                'data' => [
+                    'id' => $usuario->id,
+                    'name' => $usuario->name,
+                    'nickname' => $usuario->nickname ?? '',
+                    'email' => $usuario->email,
+                    'plan' => $esAdmin ? 'admin' : ($usuario->tier_codigo ?? 'FREE'),
+                ],
+            ]);
+
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            Log::error('Error en AuthController - login: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.AuthController_login.500',
+                'message' => 'Error interno al procesar el inicio de sesión.',
+            ], 500);
         }
-
-        $usuario->tokens()->delete();
-
-        $tokenResult = $usuario->createToken('auth_token', [$role]);
-        $token = $tokenResult->accessToken;
-
-        if ($esAdmin) {
-            $token->expires_at = now()->addMinutes(30);
-        } else {
-            $remember = $request->boolean('remember');
-            $token->expires_at = $remember ? now()->addDays(30) : now()->addHour();
-        }
-
-        $token->save();
-
-        return response()->json([
-            'access_token' => $tokenResult->plainTextToken,
-            'role' => $role,
-            'expires_at' => $token->expires_at,
-        ]);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        try {
+            $request->user()->currentAccessToken()->delete();
 
-        return response()->json([
-            'message' => 'Sesión cerrada',
-        ]);
+            return response()->json([
+                'message' => 'Sesión cerrada',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error en AuthController - logout: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.AuthController_logout.500',
+                'message' => 'Error interno al cerrar la sesión.',
+            ], 500);
+        }
     }
 
     public function register(Request $request)
     {
+        $domain = config('app.corporate_domain');
+
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:user,email',
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:user,email',
+                function ($attribute, $value, $fail) use ($domain) {
+                    if (str_ends_with(strtolower($value), '@'.$domain)) {
+                        $fail("El dominio @{$domain} está reservado para administración.");
+                    }
+                },
+            ],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'tier_codigo' => 'FREE',
+            ]);
+
+            $tokenResult = $user->createToken('auth_token', ['user']);
+
+            return response()->json([
+                'message' => 'Usuario registrado con éxito en TestMind',
+                'access_token' => $tokenResult->plainTextToken,
+                'role' => 'user',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'nickname' => '',
+                    'email' => $user->email,
+                    'plan' => 'FREE',
+                ],
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error en AuthController - register: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.AuthController_register.500',
+                'message' => 'Error interno al registrar el usuario.',
+            ], 500);
+        }
+    }
+
+    public function registerAdmin(Request $request)
+    {
+        $domain = config('app.corporate_domain');
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:admin,email', 'ends_with:@'.$domain],
+            'password' => ['required', Password::defaults()],
         ]);
 
-        $token = $user->createToken('auth_token', ['user'])->plainTextToken;
+        try {
+            $admin = Admin::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+
+            return response()->json([
+                'message' => 'Nuevo administrador dado de alta en el sistema',
+                'admin' => $admin,
+            ], 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error en AuthController - registerAdmin: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.AuthController_registerAdmin.500',
+                'message' => 'Error interno al registrar el administrador.',
+            ], 500);
+        }
+    }
+
+    public function me(Request $request)
+    {
+        try {
+            $usuario = $request->user();
+            $esAdmin = $usuario instanceof Admin;
+
+            if (! $esAdmin && $usuario->tier_codigo !== 'FREE') {
+                if ($usuario->subscription_ends_at && $usuario->subscription_ends_at->isPast()) {
+
+                    $usuario->update([
+                        'tier_codigo' => 'FREE',
+                        'paypal_subscription_id' => null,
+                        'paypal_status' => 'EXPIRED',
+                        'subscription_ends_at' => null,
+                    ]);
+
+                    Log::info("Ecosistema: El periodo de cortesía de {$usuario->email} ha concluido. Cuenta degradada a FREE de forma automática.");
+                }
+            }
+
+            return response()->json([
+                'role' => $esAdmin ? 'admin' : 'user',
+                'data' => [
+                    'id' => $usuario->id,
+                    'name' => $usuario->name,
+                    'nickname' => $usuario->nickname ?? '',
+                    'email' => $usuario->email,
+                    'plan' => $esAdmin ? 'admin' : ($usuario->tier_codigo ?? 'FREE'),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error en AuthController - me: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.AuthController_me.500',
+                'message' => 'Error interno al recuperar los datos del perfil activo.',
+            ], 500);
+        }
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('user', 'email')->ignore($user->id),
+            ],
+            'nickname' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('user', 'nickname')->ignore($user->id),
+            ],
+            'password' => ['sometimes', 'nullable', 'string', Password::defaults()],
+        ]);
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->nickname = $data['nickname'];
+
+        if (isset($data['password']) && ! empty($data['password'])) {
+            $user->password = Hash::make($data['password']);
+        }
+
+        $user->save();
 
         return response()->json([
-            'message' => 'Usuario registrado con éxito',
-            'user' => $user,
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ], 201);
+            'message' => 'Perfil actualizado con éxito en el núcleo de TestMind.',
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'nickname' => $user->nickname,
+            ],
+        ], 200);
+    }
+
+    public function updateAdminPassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        try {
+            $admin = $request->user();
+
+            $admin->password = Hash::make($request->password);
+            $admin->save();
+
+            return response()->json([
+                'message' => 'Contraseña actualizada con éxito. El núcleo de TestMind ha encriptado tu nueva clave.',
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Error en AuthController - updateAdminPassword: '.$e->getMessage());
+
+            return response()->json([
+                'error_key' => 'error.AuthController_updateAdminPassword.500',
+                'message' => 'Error interno al intentar actualizar la clave de encriptación.',
+            ], 500);
+        }
     }
 }

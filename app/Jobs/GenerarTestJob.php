@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\Test; // Importante importar el modelo
+use App\Models\Test;
 use App\Services\GeminiService;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,19 +25,15 @@ class GenerarTestJob implements ShouldQueue
         return [60, 120, 240]; // Primer reintento al minuto, segundo a los 2 min, tercero a los 4 min.
     }
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         public Test $test
     ) {}
 
-    /**
-     * Execute the job.
-     */
     public function handle(GeminiService $gemini): void
     {
-        $this->test->update(['estado' => 'procesando']);
+        $this->test->update([
+            'estado_codigo' => 'EP',
+        ]);
 
         try {
             $resultadoIA = $gemini->generarEstructuraTest(
@@ -47,16 +43,20 @@ class GenerarTestJob implements ShouldQueue
 
             $this->test->update([
                 'preguntas' => $resultadoIA['preguntas'] ?? $resultadoIA,
-                'estado' => 'completado',
+                'estado_codigo' => 'C',
+                'error_feedback' => null,
             ]);
 
-            Log::info("Test ID {$this->test->id} generado con éxito.");
+            Log::info("Test ID {$this->test->id} generado con éxito a través de GeminiService.");
 
         } catch (Exception $e) {
             Log::error("Error en GenerarTestJob para Test ID {$this->test->id}: ".$e->getMessage());
 
             if ($this->attempts() >= $this->tries) {
-                $this->test->update(['estado' => 'error']);
+
+                $this->test->update([
+                    'estado_codigo' => 'E',
+                ]);
             }
 
             throw $e;

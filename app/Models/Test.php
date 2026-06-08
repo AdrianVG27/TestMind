@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Test extends Model
 {
@@ -14,7 +15,7 @@ class Test extends Model
         'titulo',
         'configuracion',
         'preguntas',
-        'estado'
+        'estado_codigo'
     ];
 
     protected $casts = [
@@ -26,9 +27,21 @@ class Test extends Model
     {
         return $this->belongsTo(Documento::class);
     }
-    
-    public function user()
+
+    public function estado(): BelongsTo
     {
-        return $this->documento->user();
+        return $this->belongsTo(Estado::class, 'categoria_codigo', 'codigo');
+    }
+    
+    public function user(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            User::class,
+            Documento::class,
+            'id',
+            'id',
+            'documento_id',
+            'user_id'
+        );
     }
 }

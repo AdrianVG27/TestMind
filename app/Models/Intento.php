@@ -12,7 +12,8 @@ class Intento extends Model
     protected $fillable = [
         'user_id', 
         'test_id', 
-        'respuestas_usuario', 
+        'respuestas_usuario',
+        'feedback',
         'aciertos', 
         'total_preguntas', 
         'nota', 
@@ -21,6 +22,7 @@ class Intento extends Model
 
     protected $casts = [
         'respuestas_usuario' => 'array',
+        'feedback' => 'array'
     ];
 
     public function user(): BelongsTo {

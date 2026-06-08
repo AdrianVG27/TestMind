@@ -1,42 +1,99 @@
 <?php
 
+use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoriaController;
+use App\Http\Controllers\Api\EstadoController;
 use App\Http\Controllers\Api\DocumentoController;
-use App\Http\Controllers\Api\TestController;
+use App\Http\Controllers\Api\ExportacionController;
 use App\Http\Controllers\Api\IntentoController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\InterfaceTranslationController;
+use App\Http\Controllers\Api\PayPalWebhookController;
+use App\Http\Controllers\Api\TablaApoyoController;
+use App\Http\Controllers\Api\TestController;
+use App\Http\Controllers\Api\TierController;
+use App\Http\Middleware\CheckTierLimits;
+use App\Models\Lenguaje;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/tier', [TierController::class, 'index']);
+Route::post('/webhooks/paypal', [PayPalWebhookController::class, 'handleWebhook']);
+
+Route::get('/i18n/{locale}', [InterfaceTranslationController::class, 'getJson']);
+Route::get('/idiomas-disponibles', function () {
+    try {
+        return response()->json(
+            Lenguaje::select(['codigo', 'descripcion'])->get()->values()
+        );
+    } catch (\Exception $e) {
+        \Log::error('Fallo crítico en el inicializador dinámico de idiomas: '.$e->getMessage());
+
+        return response()->json([
+            ['codigo' => 'es', 'descripcion' => 'Castellano'],
+        ]);
+    }
+});
 
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/register', [AuthController::class, 'register']);
 
+Route::apiResource('/categoria', CategoriaController::class);
+Route::apiResource('/estado', EstadoController::class);
+Route::get('/documentos', [DocumentoController::class, 'indexPublic']);
+Route::get('/documentos/{documento}', [DocumentoController::class, 'show']);
+Route::get('/documentos/{documento}/descargar', [DocumentoController::class, 'descargar']);
+
+Route::get('/tests', [TestController::class, 'indexPublic']);
+Route::get('/test/{test}/realizar', [TestController::class, 'realizar']);
+
 Route::middleware(['auth:sanctum', 'refresh.token'])->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::get('/me', function (Request $request) {
-        $user = $request->user();
+    Route::get('/me', [AuthController::class, 'me']);
 
-        return response()->json([
-            'data' => $user,
-            'role' => $user->currentAccessToken()->abilities[0] ?? 'unknown',
-            'type' => (new \ReflectionClass($user))->getShortName(),
-        ]);
-    });
+    Route::prefix('user')->middleware(['abilities:user', CheckTierLimits::class])->group(function () {
 
-    Route::middleware('abilities:user')->group(function () {
-        Route::apiResource('documento', DocumentoController::class);
-        Route::apiResource('test', TestController::class);
-        Route::get('/test/{test}/realizar', [TestController::class, 'realizar']);
+        Route::post('/update', [AuthController::class, 'updateProfile']);
+
+        Route::post('/paypal/vincular-suscripcion', [PayPalWebhookController::class, 'vincularSuscripcion']);
+        Route::post('/paypal/subscription/cancel', [PayPalWebhookController::class, 'cancelarSuscripcionActiva']);
+
+        Route::apiResource('/documento', DocumentoController::class);
+        Route::apiResource('/test', TestController::class);
         Route::post('/test/{test}/corregir', [TestController::class, 'corregir']);
         Route::get('/intento', [IntentoController::class, 'index']);
         Route::get('/intento/{intento}', [IntentoController::class, 'show']);
+
+        Route::get('/test/{id}/exportar/moodle-gift', [ExportacionController::class, 'exportarAMoodleGift']);
     });
 
     Route::prefix('admin')->middleware('abilities:admin')->group(function () {
-        Route::get('/dashboard', function () {
-            return response()->json(['message' => 'Panel de gestión TestMind activo.']);
+
+        Route::post('/register', [AuthController::class, 'registerAdmin']);
+        Route::post('/update', [AuthController::class, 'updateAdminPassword']);
+
+        Route::prefix('metrics')->group(function () {
+            Route::get('/users', [AdminDashboardController::class, 'userSegmentation']);
+            Route::get('/tests-creados', [AdminDashboardController::class, 'testsCreadosTimeline']);
+            Route::get('/categorias', [AdminDashboardController::class, 'testsByCategory']);
+        });
+
+        Route::prefix('lenguaje')->group(function () {
+            Route::get('/', [InterfaceTranslationController::class, 'index']);
+            Route::put('/update', [InterfaceTranslationController::class, 'updateKey']);
+            Route::delete('/destroy', [InterfaceTranslationController::class, 'destroyKey']);
+        });
+
+        Route::prefix('tablaApoyo')->group(function () {
+            Route::get('/', [TablaApoyoController::class, 'indexTablas']);
+            Route::get('/{id}', [TablaApoyoController::class, 'readRows']);
+            Route::post('/{id}/row', [TablaApoyoController::class, 'createRow']);
+            Route::put('/{id}/row/{rowId}', [TablaApoyoController::class, 'updateRow']);
+            Route::delete('/{id}/row/{rowId}', [TablaApoyoController::class, 'deleteRow']);
+            Route::get('/{id}/row/{rowId}/lenguajes', [TablaApoyoController::class, 'getRowLanguages']);
+            Route::put('/{id}/row/{rowId}/lenguajes', [TablaApoyoController::class, 'updateRowLanguages']);
         });
     });
 
